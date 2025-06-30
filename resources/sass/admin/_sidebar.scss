@@ -1,0 +1,210 @@
+// ==========================================================
+// STYLES DU MENU LATÉRAL (SIDEBAR)
+// ==========================================================
+
+// Structure principale du sidebar
+#sidebar {
+    width: $sidebar-width;
+    background: $dark-blue;
+    color: $text-color;
+    transition: all $transition-speed $transition-ease;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: $shadow-md;
+    z-index: 1050;
+    
+    // Mode replié du sidebar
+    &.active {
+        width: $sidebar-collapsed-width;
+        text-align: center;
+    }
+    
+    // En-tête du sidebar
+    .sidebar-header {
+        padding: 20px;
+        background: $darker-blue;
+        
+        .site-title {
+            color: $highlight-color;
+            font-weight: $font-weight-bold;
+            letter-spacing: 1px;
+            font-size: $font-size-lg;
+            margin-bottom: 0;
+        }
+        
+        .site-subtitle {
+            font-size: $font-size-xs;
+            opacity: 0.7;
+        }
+        
+        .site-title-short {
+            display: none;
+        }
+    }
+    
+    // Quand le sidebar est replié
+    &.active {
+        .site-title, .site-subtitle {
+            display: none;
+        }
+        
+        .site-title-short {
+            display: block;
+            font-weight: $font-weight-bold;
+            font-size: $font-size-lg;
+            color: $highlight-color;
+        }
+    }
+    
+    // Sections du menu
+    .menu-section {
+        margin-top: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        
+        &:last-child {
+            border-bottom: none;
+        }
+        
+        // Titre de la section
+        .menu-section-title {
+            padding: 10px 20px;
+            font-size: $font-size-xs;
+            text-transform: uppercase;
+            color: $heading-color;
+            font-weight: $font-weight-semibold;
+            letter-spacing: 1px;
+        }
+    }
+    
+    // Quand le menu est replié, masquer les titres de section
+    &.active .menu-section-title {
+        display: none;
+    }
+    
+    // Items du menu
+    ul {
+        padding-left: 0;
+        list-style: none;
+        
+        li {
+            position: relative;
+            
+            a {
+                padding: 12px 20px;
+                display: flex;
+                align-items: center;
+                color: $text-color;
+                text-decoration: none;
+                transition: all 0.2s;
+                font-size: $font-size-sm;
+                
+                &:hover, &:focus {
+                    color: $highlight-color;
+                    background: rgba(255, 255, 255, 0.05);
+                }
+                
+                // Icônes dans le menu
+                i {
+                    margin-right: 10px;
+                    font-size: 1.1rem;
+                    width: 20px;
+                    text-align: center;
+                    transition: transform 0.2s;
+                }
+                
+                // Animation des icônes au survol
+                &:hover i {
+                    transform: translateY(-2px);
+                }
+            }
+            
+            // Item actif
+            &.active > a {
+                color: $highlight-color;
+                background: $active-blue;
+                font-weight: $font-weight-medium;
+            }
+        }
+    }
+    
+    // Styles spécifiques quand le menu est replié
+    &.active ul li a {
+        padding: 15px 0;
+        text-align: center;
+        font-size: 0.85em;
+        
+        i {
+            margin-right: 0;
+            display: block;
+            font-size: 1.5em;
+            margin: 0 auto 5px;
+        }
+        
+        span {
+            display: none;
+        }
+    }
+}
+
+// Zone de défilement du menu
+.menu-items {
+    overflow-y: auto;
+    flex-grow: 1;
+    scrollbar-width: thin;
+    scrollbar-color: $heading-color $dark-blue;
+    
+    // Stylisation de la scrollbar pour webkit
+    &::-webkit-scrollbar {
+        width: 5px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: $dark-blue;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background-color: $heading-color;
+        border-radius: 10px;
+    }
+}
+
+// Styles responsifs
+@media (max-width: $breakpoint-md) {
+    #sidebar {
+        width: $sidebar-collapsed-width;
+        text-align: center;
+        
+        .site-title, .site-subtitle {
+            display: none;
+        }
+        
+        .site-title-short {
+            display: block;
+        }
+        
+        .menu-section-title {
+            display: none;
+        }
+        
+        ul li a {
+            padding: 15px 0;
+            text-align: center;
+            
+            i {
+                margin-right: 0;
+                display: block;
+                font-size: 1.5em;
+                margin: 0 auto;
+            }
+            
+            span {
+                display: none;
+            }
+        }
+    }
+}

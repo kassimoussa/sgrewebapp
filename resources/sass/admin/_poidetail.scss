@@ -1,0 +1,188 @@
+/* Cartes personnalisées */
+.mpv-card {
+    border-radius: 12px;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.mpv-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+.mpv-card-body {
+    padding: 1.5rem;
+}
+
+.mpv-card-title {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Badges sous l'image principale */
+.mpv-badge-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 2;
+}
+
+.mpv-badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 50rem;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Icônes dans les informations pratiques */
+.mpv-info-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 12px;
+    background-color: #eef2ff;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.mpv-info-item {
+    padding: 5px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.mpv-info-item:last-child {
+    border-bottom: none;
+}
+
+.mpv-info-item:hover .mpv-info-icon {
+    background-color: #4f46e5;
+    color: white;
+}
+
+.mpv-info-list {
+    padding: 0;
+}
+/* Style pour éviter le débordement du texte, particulièrement des URLs */
+.mpv-info-item .ms-3 {
+    /* Permet au texte de se couper correctement */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    max-width: 100%;
+}
+
+/* S'assurer que le lien du site web se coupe correctement */
+.mpv-info-item a {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Style pour les éléments de la galerie */
+.mpv-gallery-item {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+
+    /* Création du format carré */
+    aspect-ratio: 1/1;
+    /* Rapport largeur/hauteur de 1:1 */
+    width: 100%;
+    position: relative;
+}
+
+.mpv-gallery-item img {
+    width: 100%;
+    height: 100% !important;
+    object-fit: contain;
+    /* Ajuste l'image tout en gardant ses proportions */
+    transition: transform 0.5s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.mpv-gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.mpv-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* Ajustement pour les descriptions */
+.mpv-description {
+    line-height: 1.8;
+    color: #4b5563;
+    font-size: 1.05rem;
+}
+
+.mpv-tips-content {
+    line-height: 1.7;
+    color: #4b5563;
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 18px;
+    border-radius: 8px;
+}
+
+/* Style pour la carte */
+#mpv-map {
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+#mpv-map:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation pour les éléments au chargement de la page */
+@keyframes mpvFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modern-poi-view .mpv-card {
+    animation: mpvFadeInUp 0.5s ease-out forwards;
+}
+
+.modern-poi-view .mpv-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.modern-poi-view .mpv-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.modern-poi-view .mpv-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.modern-poi-view .mpv-card:nth-child(4) {
+    animation-delay: 0.4s;
+}

@@ -1,0 +1,202 @@
+// ==========================================================
+// STYLES DE LA BARRE SUPÉRIEURE (TOPBAR)
+// ==========================================================
+
+// Structure principale de la topbar
+.topbar {
+    position: fixed;
+    top: 0;
+    left: $sidebar-width;
+    width: calc(100% - #{$sidebar-width});
+    height: $topbar-height;
+    background-color: $darker-blue;
+    color: $highlight-color;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1040;
+    box-shadow: $shadow-sm;
+    transition: all $transition-speed $transition-ease;
+    
+    // Ajustement quand le sidebar est replié
+    #sidebar.active + #content-container & {
+        left: $sidebar-collapsed-width;
+        width: calc(100% - #{$sidebar-collapsed-width});
+    }
+    
+    // Partie gauche de la topbar
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        
+        .topbar-title {
+            font-weight: $font-weight-semibold;
+            letter-spacing: 0.5px;
+            font-size: $font-size-lg;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+    
+    // Partie droite de la topbar
+    .topbar-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        
+        a {
+            color: $text-color;
+            margin-left: 20px;
+            font-size: $font-size-lg;
+            transition: all 0.2s;
+            position: relative;
+            
+            &:hover {
+                color: $highlight-color;
+            }
+            
+            // Badge de notification
+            .notification-badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: $danger-color;
+                color: white;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                font-size: 11px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+        }
+    }
+}
+
+// Bouton de bascule du menu
+#sidebarCollapse {
+    background-color: transparent;
+    border: none;
+    color: $text-color;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 15px;
+    transition: all 0.2s;
+    cursor: pointer;
+    
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: $highlight-color;
+    }
+    
+    &:focus {
+        outline: none;
+    }
+    
+    i {
+        font-size: 1.2rem;
+        transition: all 0.2s;
+    }
+}
+
+// Styles responsifs
+@media (max-width: $breakpoint-md) {
+    .topbar {
+        left: $sidebar-collapsed-width;
+        width: calc(100% - #{$sidebar-collapsed-width});
+        
+        .topbar-left {
+            .topbar-title {
+                font-size: 1rem;
+            }
+        }
+        
+        .topbar-right {
+            a {
+                margin-left: 15px;
+                font-size: 1rem;
+            }
+        }
+    }
+    
+    #sidebarCollapse {
+        width: 35px;
+        height: 35px;
+        margin-right: 10px;
+    }
+}
+
+@media (max-width: $breakpoint-sm) {
+    .topbar {
+        padding: 0 10px;
+        
+        .topbar-right {
+            a {
+                margin-left: 10px;
+            }
+        }
+    }
+}
+
+.topbar {
+    .topbar-right {
+        .dropdown {
+            position: relative;
+            
+            .dropdown-toggle {
+                &::after {
+                    display: none; // Cache la flèche par défaut de Bootstrap
+                }
+            }
+            
+            .dropdown-menu {
+                margin-top: 0.5rem;
+                border: none;
+                box-shadow: $shadow-md;
+                border-radius: 8px;
+                padding: 0.5rem 0;
+                min-width: 200px;
+                
+                .dropdown-header {
+                    padding: 0.5rem 1rem;
+                    font-weight: $font-weight-semibold;
+                    color: $heading-color;
+                    font-size: $font-size-sm;
+                }
+                
+                .dropdown-item {
+                    padding: 0.6rem 1rem;
+                    color: $text-color;
+                    font-size: $font-size-sm;
+                    transition: all 0.2s;
+                    
+                    &:hover, &:focus {
+                        background-color: rgba($highlight-color, 0.05);
+                        color: $highlight-color;
+                    }
+                    
+                    i {
+                        margin-right: 0.5rem;
+                    }
+                }
+                
+                .dropdown-divider {
+                    margin: 0.25rem 0;
+                    border-top-color: rgba($highlight-color, 0.1);
+                }
+                
+                // Style spécifique pour le bouton de déconnexion
+                form .dropdown-item i.fa-sign-out-alt {
+                    color: $danger-color;
+                }
+            }
+        }
+    }
+}

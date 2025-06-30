@@ -1,0 +1,18 @@
+// resources/sass/app.scss - Version compatible Vite
+
+// FontAwesome CSS (importé directement)
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+// Variables SASS (DOIT être avant Bootstrap)
+@import 'variables';
+
+// Bootstrap SCSS (syntaxe Vite sans ~)
+@import 'bootstrap/scss/bootstrap';
+
+// Composants du panneau d'administration
+@import 'admin/sidebar';
+@import 'admin/topbar';
+@import 'admin/content';
+@import 'admin/employer-details';
+
+// @import 'admin/poidetail';
