@@ -127,7 +127,7 @@
                                 {{-- Nom complet --}}
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar-circle me-3">
+                                        <div class="avatar-circle text-black me-3">
                                             {{ strtoupper(substr($employer->prenom, 0, 1) . substr($employer->nom, 0, 1)) }}
                                         </div>
                                         <div>
