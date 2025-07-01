@@ -109,7 +109,6 @@ class EmployeeController extends Controller
             'region' => 'required|string|max:100',
             'ville' => 'required|string|max:100',
             'quartier' => 'required|string|max:100',
-            'adresse_complete' => 'required|string|max:255',
             
             // Contrat
             'type_emploi' => 'required|in:Temps plein,Temps partiel,Journalier,Gardiennage',
