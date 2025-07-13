@@ -45,14 +45,15 @@ class ConfirmationMensuelle extends Model
         return $this->belongsTo(Contrat::class);
     }
 
-    public function employee(): BelongsTo
+    // Méthodes pour accéder aux relations via contrat
+    public function getEmployeeAttribute()
     {
-        return $this->belongsTo(Employee::class)->through('contrat');
+        return $this->contrat?->employee;
     }
 
-    public function employer(): BelongsTo
+    public function getEmployerAttribute()
     {
-        return $this->belongsTo(Employer::class)->through('contrat');
+        return $this->contrat?->employer;
     }
 
     // Scopes

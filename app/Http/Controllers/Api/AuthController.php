@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -464,5 +466,150 @@ class AuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Renouveler le token d'accès
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        try {
+            $validatedData = $request->validate([
+                'refresh_token' => 'required|string'
+            ], [
+                'refresh_token.required' => 'Le token de rafraîchissement est requis.'
+            ]);
+
+            // Note: Laravel Sanctum ne supporte pas nativement les refresh tokens
+            // Pour une implémentation complète, il faudrait utiliser Laravel Passport
+            // ou implémenter une logique personnalisée de refresh tokens
+            
+            // Pour l'instant, on vérifie si l'utilisateur est toujours authentifié
+            $employer = $request->user();
+            
+            if (!$employer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token invalide ou expiré',
+                ], 401);
+            }
+
+            // Créer un nouveau token
+            $newToken = $employer->createToken('mobile-app', ['employer'])->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Token renouvelé avec succès',
+                'data' => [
+                    'access_token' => $newToken,
+                    'token_type' => 'Bearer',
+                    'expires_in' => 3600
+                ]
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreurs de validation',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du renouvellement du token',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload des documents de l'employeur
+     * POST /api/v1/profile/documents
+     */
+    public function uploadProfileDocuments(Request $request): JsonResponse
+    {
+        try {
+            $employer = $request->user();
+
+            $validator = Validator::make($request->all(), [
+                'type_document' => 'required|in:piece_identite,justificatif_domicile,autre',
+                'document' => 'required|string', // Base64 du document
+                'nom_document' => 'nullable|string|max:255',
+            ], [
+                'type_document.required' => 'Le type de document est requis.',
+                'type_document.in' => 'Le type de document doit être piece_identite, justificatif_domicile ou autre.',
+                'document.required' => 'Le document est requis.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreurs de validation',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // Sauvegarder le document
+            $documentPath = $this->saveEmployerDocument(
+                $employer->id, 
+                $request->type_document, 
+                $request->document,
+                $request->nom_document
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Document uploadé avec succès',
+                'data' => [
+                    'document_url' => Storage::url($documentPath),
+                    'type_document' => $request->type_document,
+                    'uploaded_at' => now()->toISOString(),
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload du document',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Sauvegarder un document employeur en base64
+     */
+    private function saveEmployerDocument($employerId, $type, $base64Data, $nomDocument = null)
+    {
+        // Extraire les données base64
+        if (preg_match('/^data:([^;]+);base64,(.+)$/', $base64Data, $matches)) {
+            $mimeType = $matches[1];
+            $base64 = $matches[2];
+        } else {
+            $base64 = $base64Data;
+            $mimeType = 'application/pdf'; // Par défaut
+        }
+
+        // Décoder le base64
+        $fileData = base64_decode($base64);
+        
+        // Déterminer l'extension
+        $extension = '.pdf';
+        if (strpos($mimeType, 'image/') === 0) {
+            $extension = strpos($mimeType, 'jpeg') !== false ? '.jpg' : '.png';
+        }
+        
+        // Générer un nom de fichier unique
+        $fileName = $type . '_employer_' . $employerId . '_' . time() . $extension;
+        $filePath = "employers/documents/" . $fileName;
+
+        // Sauvegarder le fichier
+        Storage::disk('public')->put($filePath, $fileData);
+
+        // Enregistrer en base de données si vous avez une table documents_employers
+        // Sinon, vous pouvez retourner juste le chemin
+        
+        return $filePath;
     }
 }

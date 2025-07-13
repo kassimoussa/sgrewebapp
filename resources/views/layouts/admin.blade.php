@@ -216,12 +216,12 @@
                     <ul class="list-unstyled components">
                         <li class="{{ request()->is('admin/employees*') ? 'active' : '' }}">
                             <a href="{{ route('employees.index') }}" data-bs-toggle="tooltip" data-bs-placement="right"
-                                title="La liste des ressortissants">
+                                title="La liste des employés étrangers ">
                                 <i class="fas fa-user-plus"></i>
-                                <span>Ressortissants</span>
+                                <span>Employés</span>
                             </a>
                         </li>
-                        <li class="{{ request()->is('/empoyers*') ? 'active' : '' }}">
+                        <li class="{{ request()->is('admin/employers*') ? 'active' : '' }}">
                             <a href="{{ route('employers.index') }}" data-bs-toggle="tooltip" data-bs-placement="right"
                                 title="La liste des employeurs">
                                 <i class="fas fa-users-gear"></i>

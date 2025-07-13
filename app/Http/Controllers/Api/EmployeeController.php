@@ -68,9 +68,10 @@ class EmployeeController extends Controller
 
             // Enrichir les données
             $employees->getCollection()->transform(function ($employee) {
-                $employee->photo_url = $this->getEmployeePhotoUrl($employee->id);
-                $employee->age = Carbon::parse($employee->date_naissance)->age;
-                $employee->needs_confirmation = $this->needsMonthlyConfirmation($employee->activeContrat);
+                $employee->makeHidden(['photo_url', 'age']); // Masquer les accessors
+                $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
+                $employee->setAttribute('age', Carbon::parse($employee->date_naissance)->age);
+                $employee->setAttribute('needs_confirmation', $this->needsMonthlyConfirmation($employee->activeContrat));
                 return $employee;
             });
 
@@ -111,7 +112,7 @@ class EmployeeController extends Controller
             'quartier' => 'required|string|max:100',
             
             // Contrat
-            'type_emploi' => 'required|in:Temps plein,Temps partiel,Journalier,Gardiennage',
+            'type_emploi' => 'required|in:Ménage,Gardien,Jardinier,Coulis,Vendeur',
             'salaire_mensuel' => 'required|numeric|min:10000|max:500000',
             'date_debut' => 'required|date|before_or_equal:today',
             
@@ -182,7 +183,8 @@ class EmployeeController extends Controller
 
             // Charger les relations pour la réponse
             $employee->load(['nationality', 'activeContrat.employer']);
-            $employee->photo_url = $this->getEmployeePhotoUrl($employee->id);
+            $employee->makeHidden(['photo_url']);
+            $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
 
             return response()->json([
                 'success' => true,
@@ -228,10 +230,11 @@ class EmployeeController extends Controller
             }
 
             // Enrichir les données
-            $employee->photo_url = $this->getEmployeePhotoUrl($employee->id);
-            $employee->identity_document_url = $this->getEmployeeDocumentUrl($employee->id, 'piece_identite');
-            $employee->age = Carbon::parse($employee->date_naissance)->age;
-            $employee->needs_confirmation = $this->needsMonthlyConfirmation($employee->activeContrat);
+            $employee->makeHidden(['photo_url', 'age']); // Masquer les accessors
+            $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
+            $employee->setAttribute('identity_document_url', $this->getEmployeeDocumentUrl($employee->id, 'piece_identite'));
+            $employee->setAttribute('age', Carbon::parse($employee->date_naissance)->age);
+            $employee->setAttribute('needs_confirmation', $this->needsMonthlyConfirmation($employee->activeContrat));
 
             // Charger les confirmations mensuelles
             $confirmations = [];
@@ -307,7 +310,8 @@ class EmployeeController extends Controller
             ]));
 
             $employee->load(['nationality', 'activeContrat.employer']);
-            $employee->photo_url = $this->getEmployeePhotoUrl($employee->id);
+            $employee->makeHidden(['photo_url']);
+            $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
 
             return response()->json([
                 'success' => true,
@@ -449,5 +453,258 @@ class EmployeeController extends Controller
             ->where('mois', $currentMonth)
             ->where('annee', $currentYear)
             ->exists();
+    }
+
+    /**
+     * Mettre à jour uniquement la photo d'un employé
+     * PUT /api/v1/employees/{id}/photo
+     */
+    public function updatePhoto(Request $request, $id): JsonResponse
+    {
+        try {
+            $employer = $request->user();
+            
+            $employee = Employee::whereHas('contrats', function($query) use ($employer) {
+                $query->where('employer_id', $employer->id);
+            })->find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employé non trouvé ou vous n\'avez pas l\'autorisation',
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'photo' => 'required|string',
+            ], [
+                'photo.required' => 'La photo est requise.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreurs de validation',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // Supprimer l'ancienne photo si elle existe
+            $oldPhoto = DocumentEmployee::where('employee_id', $employee->id)
+                ->where('type_document', 'photo')
+                ->latest()
+                ->first();
+
+            if ($oldPhoto) {
+                Storage::disk('public')->delete($oldPhoto->chemin_fichier);
+                $oldPhoto->delete();
+            }
+
+            // Sauvegarder la nouvelle photo
+            $this->saveBase64Document($employee->id, 'photo', $request->photo);
+
+            // Récupérer la nouvelle URL
+            $photoUrl = $this->getEmployeePhotoUrl($employee->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo mise à jour avec succès',
+                'data' => [
+                    'employee' => [
+                        'id' => $employee->id,
+                        'photo_url' => $photoUrl,
+                    ]
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de la photo',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Rechercher un employé existant pour réenregistrement
+     * POST /api/v1/employees/search
+     */
+    public function search(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'employee_id' => 'sometimes|string|max:10',
+                'prenom' => 'sometimes|string|max:100',
+                'nom' => 'sometimes|string|max:100',
+                'telephone' => 'sometimes|string|max:20',
+                'date_naissance' => 'sometimes|date',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreurs de validation',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $query = Employee::with(['nationality', 'activeContrat.employer']);
+
+            // Recherche par ID employé (si un format spécifique existe)
+            if ($request->has('employee_id') && !empty($request->employee_id)) {
+                $employeeId = ltrim($request->employee_id, '0'); // Enlever les zéros de début
+                $query->where('id', $employeeId);
+            }
+
+            // Recherche par prénom
+            if ($request->has('prenom') && !empty($request->prenom)) {
+                $query->where('prenom', 'like', '%' . $request->prenom . '%');
+            }
+
+            // Recherche par nom
+            if ($request->has('nom') && !empty($request->nom)) {
+                $query->where('nom', 'like', '%' . $request->nom . '%');
+            }
+
+            // Recherche par téléphone
+            if ($request->has('telephone') && !empty($request->telephone)) {
+                $cleanPhone = preg_replace('/[^0-9+]/', '', $request->telephone);
+                $query->where(function($q) use ($request, $cleanPhone) {
+                    $q->where('telephone', $request->telephone)
+                      ->orWhere('telephone', $cleanPhone)
+                      ->orWhere('telephone', 'like', '%' . substr($cleanPhone, -8));
+                });
+            }
+
+            // Recherche par date de naissance
+            if ($request->has('date_naissance') && !empty($request->date_naissance)) {
+                $query->where('date_naissance', $request->date_naissance);
+            }
+
+            $employees = $query->limit(10)->get();
+
+            // Enrichir les données
+            $employees->transform(function ($employee) use ($request) {
+                $currentEmployer = $employee->activeContrat ? $employee->activeContrat->employer : null;
+                $canRegister = !$employee->activeContrat || !$employee->activeContrat->est_actif;
+
+                return [
+                    'id' => $employee->id,
+                    'prenom' => $employee->prenom,
+                    'nom' => $employee->nom,
+                    'date_naissance' => $employee->date_naissance,
+                    'telephone' => $employee->telephone,
+                    'nationalite' => $employee->nationality ? $employee->nationality->nom : null,
+                    'current_employer' => $currentEmployer ? ($currentEmployer->prenom . ' ' . $currentEmployer->nom) : 'Aucun employeur actuel',
+                    'can_register' => $canRegister,
+                    'photo_url' => $this->getEmployeePhotoUrl($employee->id),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Recherche effectuée avec succès',
+                'data' => [
+                    'employees' => $employees,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la recherche',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Enregistrer un employé existant avec un nouvel employeur
+     * POST /api/v1/employees/{id}/register-existing
+     */
+    public function registerExisting(Request $request, $id): JsonResponse
+    {
+        try {
+            $employer = $request->user();
+            
+            $employee = Employee::find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employé non trouvé',
+                ], 404);
+            }
+
+            // Vérifier si l'employé a déjà un contrat actif
+            $activeContract = $employee->activeContrat;
+            if ($activeContract && $activeContract->est_actif) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cet employé a déjà un contrat actif avec un autre employeur',
+                ], 400);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'contract.type_emploi' => 'required|in:Ménage,Gardien,Jardinier,Coulis,Vendeur',
+                'contract.salaire_mensuel' => 'required|numeric|min:10000|max:500000',
+                'contract.date_debut' => 'required|date|after_or_equal:today',
+            ], [
+                'contract.type_emploi.required' => 'Le type d\'emploi est requis.',
+                'contract.salaire_mensuel.required' => 'Le salaire mensuel est requis.',
+                'contract.salaire_mensuel.min' => 'Le salaire doit être d\'au moins 10 000 FDJ.',
+                'contract.date_debut.required' => 'La date de début est requise.',
+                'contract.date_debut.after_or_equal' => 'La date de début doit être aujourd\'hui ou dans le futur.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreurs de validation',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            // Créer le nouveau contrat
+            $contract = Contrat::create([
+                'employer_id' => $employer->id,
+                'employee_id' => $employee->id,
+                'date_debut' => $request->contract['date_debut'],
+                'type_emploi' => $request->contract['type_emploi'],
+                'salaire_mensuel' => $request->contract['salaire_mensuel'],
+                'est_actif' => true,
+            ]);
+
+            // Activer l'employé
+            $employee->update(['is_active' => true]);
+
+            DB::commit();
+
+            // Charger les relations pour la réponse
+            $employee->load(['nationality', 'activeContrat.employer']);
+            $employee->makeHidden(['photo_url']);
+            $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Employé enregistré avec succès',
+                'data' => [
+                    'employee' => $employee,
+                    'contract' => $contract,
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'enregistrement de l\'employé',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

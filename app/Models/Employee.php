@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -51,10 +52,9 @@ class Employee extends Model
         return $this->hasOne(Contrat::class)->where('est_actif', true);
     }
 
-    public function currentEmployer(): BelongsTo
+    public function currentEmployer()
     {
-        return $this->belongsTo(Employer::class, 'employer_id')
-                    ->through('activeContrat');
+        return $this->activeContrat?->employer;
     }
 
     public function documents(): HasMany
@@ -72,10 +72,9 @@ class Employee extends Model
         return $this->hasOne(DocumentEmployee::class)->where('type_document', 'piece_identite');
     }
 
-    public function confirmations(): HasMany
+    public function confirmations(): HasManyThrough
     {
-        return $this->hasMany(ConfirmationMensuelle::class)
-                    ->through('contrats');
+        return $this->hasManyThrough(ConfirmationMensuelle::class, Contrat::class);
     }
 
     // Scopes
@@ -111,7 +110,7 @@ class Employee extends Model
             $q->where('nom', 'like', "%{$search}%")
               ->orWhere('prenom', 'like', "%{$search}%")
               ->orWhereHas('nationality', function ($nq) use ($search) {
-                  $nq->where('name', 'like', "%{$search}%");
+                  $nq->where('nom', 'like', "%{$search}%");
               });
         });
     }

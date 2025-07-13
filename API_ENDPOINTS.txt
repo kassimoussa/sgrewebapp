@@ -1,0 +1,391 @@
+# ENDPOINTS API NÉCESSAIRES POUR L'APPLICATION SGRE
+# Système de Gestion et de Régulation des Employés Domestiques
+# Analyse basée sur le code source Flutter existant
+
+Base URL: http://197.241.32.130:82/api/v1
+Authentification: Bearer Token via header Authorization: Bearer {token}
+Content-Type: application/json
+Timeout: 30 secondes (60s pour uploads)
+
+================================================================================
+1. AUTHENTIFICATION
+================================================================================
+
+POST /api/v1/auth/register
+   But: Inscription d'un nouvel employeur (étape 1)
+   Params: { email, telephone, mot_de_passe, mot_de_passe_confirmation }
+   Réponse: { success, data: { employer, token, next_step } }
+
+PUT /api/v1/auth/complete-profile
+   But: Compléter le profil employeur (étape 2)
+   Params: { prenom, nom, genre, region, ville, quartier }
+   Réponse: { success, message }
+
+POST /api/v1/auth/login
+   But: Connexion utilisateur
+   Params: { identifiant (email ou téléphone), mot_de_passe }
+   Réponse: { success, data: { employer, token } }
+
+POST /api/v1/auth/check-identifier
+   But: Vérifier si un email/téléphone existe déjà
+   Params: { identifier }
+   Réponse: { success, exists }
+
+POST /api/v1/auth/logout
+   But: Déconnexion utilisateur
+   Params: {}
+   Réponse: { success, message }
+
+GET /api/v1/auth/me
+   But: Récupérer le profil utilisateur actuel
+   Params: Aucun (auth via token)
+   Réponse: { success, data: { employer object } }
+
+PUT /api/v1/auth/profile
+   But: Mettre à jour le profil utilisateur
+   Params: { prenom?, nom?, genre?, region?, ville?, quartier? }
+   Réponse: { success, message }
+
+PUT /api/v1/auth/change-password
+   But: Changer le mot de passe
+   Params: { current_password, new_password, new_password_confirmation }
+   Réponse: { success, message }
+
+================================================================================
+2. GESTION DES EMPLOYÉS
+================================================================================
+
+POST /api/v1/employees
+   But: Enregistrer un nouveau employé avec contrat
+   Params: {
+     prenom, nom, genre, etat_civil, date_naissance, nationality_id,
+     date_arrivee, region, ville, quartier, adresse_complete,
+     type_emploi, salaire_mensuel, date_debut,
+     photo? (base64), piece_identite? (base64)
+   }
+   Réponse: { success, data: { employee, contract, employee_id } }
+
+GET /api/v1/employees
+   But: Liste paginée des employés de l'employeur
+   Params: ?page&per_page&search&region&genre&sort_by&sort_direction
+   Réponse: { success, data: { data[], current_page, last_page, total, per_page, next_page_url, prev_page_url } }
+
+GET /api/v1/employees/{id}
+   But: Détails d'un employé spécifique
+   Params: id dans l'URL
+   Réponse: { success, data: { employee } }
+
+PUT /api/v1/employees/{id}
+   But: Mettre à jour les informations d'un employé
+   Params: Données modifiées de l'employé
+   Réponse: { success, message, employee? }
+
+PUT /api/v1/employees/{id}/photo
+   But: Mettre à jour la photo d'un employé
+   Params: { photo (base64) }
+   Réponse: { success, message, employee? }
+
+DELETE /api/v1/employees/{id}
+   But: Supprimer/désactiver un employé
+   Params: id dans l'URL
+   Réponse: { success, message }
+
+================================================================================
+3. GESTION DES CONTRATS
+================================================================================
+
+GET /api/v1/contracts
+   But: Lister tous les contrats de l'employeur
+   Params: ?page&per_page&status&employee_id
+   Réponse: { success, data: { contracts[], pagination } }
+
+GET /api/v1/contracts/{id}
+   But: Détails d'un contrat spécifique
+   Params: id dans l'URL
+   Réponse: { success, data: { contract } }
+
+PUT /api/v1/contracts/{id}
+   But: Modifier un contrat existant
+   Params: { type_emploi?, salaire_mensuel?, date_debut? }
+   Réponse: { success, data: { contract } }
+
+PUT /api/v1/contracts/{id}/terminate
+   But: Terminer un contrat
+   Params: { date_fin, motif }
+   Réponse: { success, data: { contract } }
+
+POST /api/v1/employees/{employee_id}/contracts
+   But: Créer un nouveau contrat pour un employé existant
+   Params: { type_emploi, salaire_mensuel, date_debut }
+   Réponse: { success, data: { contract } }
+
+================================================================================
+4. CONFIRMATIONS MENSUELLES
+================================================================================
+
+POST /api/v1/monthly-confirmations
+   But: Créer une déclaration mensuelle
+   Params: {
+     contrat_id, mois, annee, statut_emploi, jours_travailles,
+     jours_absence, jours_conge, salaire_verse?, observations?
+   }
+   Réponse: { success, data: { confirmation } }
+
+GET /api/v1/monthly-confirmations
+   But: Lister les déclarations mensuelles
+   Params: ?contract_id&year&month&page&per_page
+   Réponse: { success, data: { confirmations[], pagination } }
+
+GET /api/v1/monthly-confirmations/{id}
+   But: Détails d'une déclaration mensuelle
+   Params: id dans l'URL
+   Réponse: { success, data: { confirmation } }
+
+PUT /api/v1/monthly-confirmations/{id}
+   But: Modifier une déclaration mensuelle
+   Params: Données modifiées de la déclaration
+   Réponse: { success, data: { confirmation } }
+
+DELETE /api/v1/monthly-confirmations/{id}
+   But: Supprimer une déclaration mensuelle
+   Params: id dans l'URL
+   Réponse: { success, message }
+
+GET /api/v1/contracts/{contract_id}/monthly-confirmations
+   But: Historique des confirmations pour un contrat
+   Params: contract_id dans l'URL, ?year&month
+   Réponse: { success, data: { confirmations[] } }
+
+================================================================================
+5. GESTION DES NATIONALITÉS
+================================================================================
+
+GET /api/v1/nationalities
+   But: Lister toutes les nationalités disponibles
+   Params: ?all=true (pour éviter la pagination)
+   Réponse: { success, data: [{ id, nom, code, is_active }] }
+
+POST /api/v1/nationalities (Admin seulement)
+   But: Créer une nouvelle nationalité
+   Params: { nom, code?, is_active }
+   Réponse: { success, data: { nationality } }
+
+PUT /api/v1/nationalities/{id} (Admin seulement)
+   But: Modifier une nationalité
+   Params: { nom?, code?, is_active? }
+   Réponse: { success, data: { nationality } }
+
+GET /api/v1/nationalities/statistics (Admin seulement)
+   But: Statistiques d'utilisation des nationalités
+   Params: Aucun
+   Réponse: { success, data: { stats } }
+
+================================================================================
+6. GESTION DES DOCUMENTS
+================================================================================
+
+GET /api/v1/documents
+   But: Lister tous les documents de l'employeur
+   Params: ?type&page&per_page
+   Réponse: { success, data: { documents[] } }
+
+GET /api/v1/documents/type/{type}
+   But: Récupérer un document par type
+   Params: type dans l'URL
+   Réponse: { success, data: { document } }
+
+GET /api/v1/documents/{id}
+   But: Récupérer un document par ID
+   Params: id dans l'URL
+   Réponse: { success, data: { document } }
+
+POST /api/v1/documents/upload
+   But: Upload d'un document (multipart)
+   Params: File: document (multipart), Fields: type_document, nom_fichier?
+   Réponse: { success, data: { document } }
+
+DELETE /api/v1/documents/{id}
+   But: Supprimer un document
+   Params: id dans l'URL
+   Réponse: { success, message }
+
+GET /api/v1/employer/documents
+   But: Documents spécifiques à l'employeur connecté
+   Params: ?type&page&per_page
+   Réponse: { success, data: { documents[] } }
+
+POST /api/v1/employer/documents/upload
+   But: Upload document employeur
+   Params: Similaire à /documents/upload
+   Réponse: { success, data: { document } }
+
+================================================================================
+7. STATISTIQUES ET TABLEAU DE BORD
+================================================================================
+
+GET /api/v1/dashboard/stats
+   But: Statistiques générales du tableau de bord
+   Params: ?period&year&month
+   Réponse: {
+     success, data: {
+       active_employees, inactive_employees, pending_confirmations,
+       total_contracts, monthly_stats[], salary_stats
+     }
+   }
+
+GET /api/v1/dashboard/recent-activities
+   But: Activités récentes de l'employeur
+   Params: ?limit
+   Réponse: { success, data: { activities[] } }
+
+GET /api/v1/statistics/employees
+   But: Statistiques détaillées des employés
+   Params: ?period&filters
+   Réponse: { success, data: { stats by region, genre, nationality, etc. } }
+
+GET /api/v1/statistics/contracts
+   But: Statistiques des contrats
+   Params: ?period&status
+   Réponse: { success, data: { contract stats by type, duration, etc. } }
+
+================================================================================
+8. RECHERCHE ET EXPORTS
+================================================================================
+
+GET /api/v1/search/employees
+   But: Recherche avancée d'employés
+   Params: ?q&filters&sort&page&per_page
+   Réponse: { success, data: { results[], facets } }
+
+GET /api/v1/reports/employees/export
+   But: Exporter la liste des employés (CSV/PDF)
+   Params: ?format&filters&date_range
+   Réponse: Fichier binaire ou URL de téléchargement
+
+GET /api/v1/reports/monthly-confirmations/export
+   But: Exporter les déclarations mensuelles
+   Params: ?format&year&month&employee_id
+   Réponse: Fichier binaire ou URL de téléchargement
+
+GET /api/v1/reports/salary-summary
+   But: Rapport de synthèse des salaires
+   Params: ?period&year&month
+   Réponse: { success, data: { salary_summary } }
+
+================================================================================
+9. HISTORIQUE ET ACTIVITÉS
+================================================================================
+
+GET /api/v1/employees/{id}/history
+   But: Historique complet d'un employé (tous ses emplois)
+   Params: id dans l'URL, ?include_other_employers
+   Réponse: { success, data: { employment_history[] } }
+
+GET /api/v1/employees/{id}/contracts/history
+   But: Historique des contrats d'un employé
+   Params: id dans l'URL
+   Réponse: { success, data: { contracts_history[] } }
+
+POST /api/v1/employees/transfer
+   But: Transférer un employé vers un autre employeur
+   Params: { employee_id, new_employer_info, end_current_contract }
+   Réponse: { success, data: { transfer_record } }
+
+GET /api/v1/activity-log
+   But: Journal d'activité de l'employeur
+   Params: ?type&date_range&page&per_page
+   Réponse: { success, data: { activities[], pagination } }
+
+================================================================================
+10. SANTÉ SYSTÈME
+================================================================================
+
+GET /api/health
+   But: Vérifier la santé de l'API
+   Params: Aucun
+   Réponse: { status: "OK", timestamp }
+
+GET /api/v1/system/info
+   But: Informations système (version API, etc.)
+   Params: Aucun
+   Réponse: { version, build, environment }
+
+================================================================================
+11. ENDPOINTS POUR FONCTIONNALITÉS FUTURES
+================================================================================
+
+# Notifications
+GET /api/v1/notifications
+   But: Lister les notifications de l'utilisateur
+   Params: ?unread_only&page&per_page
+   Réponse: { success, data: { notifications[] } }
+
+PUT /api/v1/notifications/{id}/read
+   But: Marquer une notification comme lue
+   Params: id dans l'URL
+   Réponse: { success, message }
+
+# Intégration avec système gouvernemental
+POST /api/v1/government/sync
+   But: Synchroniser avec le système gouvernemental
+   Params: { employee_ids[], sync_type }
+   Réponse: { success, data: { sync_results[] } }
+
+GET /api/v1/government/status/{employee_id}
+   But: Vérifier le statut gouvernemental d'un employé
+   Params: employee_id dans l'URL
+   Réponse: { success, data: { government_status } }
+
+# Gestion des employés existants dans la BDD
+POST /api/v1/employees/existing/claim
+   But: Réclamer un employé existant dans la BDD
+   Params: { employee_identifier, verification_data }
+   Réponse: { success, data: { employee, new_contract } }
+
+GET /api/v1/employees/search-existing
+   But: Rechercher des employés existants dans la BDD
+   Params: ?name&nationality&date_birth&phone
+   Réponse: { success, data: { potential_matches[] } }
+
+================================================================================
+NOTES D'IMPLÉMENTATION:
+================================================================================
+
+1. Tous les endpoints nécessitent l'authentification Bearer Token sauf :
+   - POST /api/v1/auth/register
+   - POST /api/v1/auth/login
+   - POST /api/v1/auth/check-identifier
+   - GET /api/health
+
+2. Formats de dates: YYYY-MM-DD pour les dates, YYYY-MM-DD HH:mm:ss pour timestamps
+
+3. Pagination standard:
+   - page: numéro de page (défaut: 1)
+   - per_page: éléments par page (défaut: 15, max: 100)
+
+4. Upload de fichiers:
+   - Base64 pour les petits fichiers (photos, documents scannés)
+   - Multipart/form-data pour les gros fichiers
+   - Taille max recommandée: 5MB par fichier
+
+5. Codes d'erreur standard:
+   - 200: Succès
+   - 201: Créé avec succès
+   - 400: Données invalides
+   - 401: Non authentifié
+   - 403: Non autorisé
+   - 404: Ressource non trouvée
+   - 422: Erreurs de validation
+   - 500: Erreur serveur
+
+6. Structure de réponse standard:
+   {
+     "success": boolean,
+     "message": "string",
+     "data": object|array|null,
+     "errors": object|null,
+     "meta": {
+       "pagination": object|null,
+       "timestamp": "string"
+     }
+   }

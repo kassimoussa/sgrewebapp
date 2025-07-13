@@ -1,0 +1,429 @@
+{
+    "info": {
+        "name": "SGRE API - Nouveaux Endpoints",
+        "description": "Collection Postman pour tester tous les nouveaux endpoints API SGRE",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{auth_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost/sgreweb/public/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "employee_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "contract_id",
+            "value": "1",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Authentification",
+            "item": [
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "if (pm.response.to.have.status(200)) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.success && response.data.token) {",
+                                    "        pm.collectionVariables.set('auth_token', response.data.token);",
+                                    "        pm.test('Token récupéré avec succès', function () {",
+                                    "            pm.expect(response.data.token).to.be.a('string');",
+                                    "        });",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"identifiant\": \"test@example.com\",\n    \"mot_de_passe\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"refresh_token\": \"{{auth_token}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/refresh",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "refresh"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Recherche Employés",
+            "item": [
+                {
+                    "name": "Rechercher par prénom",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"prenom\": \"Marie\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/employees/search",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "search"]
+                        }
+                    }
+                },
+                {
+                    "name": "Rechercher par téléphone",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"telephone\": \"+25377123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/employees/search",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "search"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. Gestion Photos",
+            "item": [
+                {
+                    "name": "Mettre à jour photo employé",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"photo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/employees/{{employee_id}}/photo",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "{{employee_id}}", "photo"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. Gestion Contrats",
+            "item": [
+                {
+                    "name": "Historique contrats employé",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/employees/{{employee_id}}/contracts",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "{{employee_id}}", "contracts"]
+                        }
+                    }
+                },
+                {
+                    "name": "Créer nouveau contrat",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type_emploi\": \"Ménage\",\n    \"salaire_mensuel\": 45000,\n    \"date_debut\": \"2024-08-01\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/employees/{{employee_id}}/contracts",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "{{employee_id}}", "contracts"]
+                        }
+                    }
+                },
+                {
+                    "name": "Détails d'un contrat",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/contracts/{{contract_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["contracts", "{{contract_id}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Terminer un contrat",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"date_fin\": \"2024-12-31\",\n    \"motif\": \"Fin de contrat à l'amiable\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/contracts/{{contract_id}}/terminate",
+                            "host": ["{{base_url}}"],
+                            "path": ["contracts", "{{contract_id}}", "terminate"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. Dashboard & Statistiques",
+            "item": [
+                {
+                    "name": "Statistiques complètes",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/dashboard/stats",
+                            "host": ["{{base_url}}"],
+                            "path": ["dashboard", "stats"]
+                        }
+                    }
+                },
+                {
+                    "name": "Résumé dashboard",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/dashboard/summary",
+                            "host": ["{{base_url}}"],
+                            "path": ["dashboard", "summary"]
+                        }
+                    }
+                },
+                {
+                    "name": "Export employés (JSON)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/reports/employees?format=json",
+                            "host": ["{{base_url}}"],
+                            "path": ["reports", "employees"],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Export employés avec dates",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/reports/employees?format=json&date_from=2024-01-01&date_to=2024-12-31",
+                            "host": ["{{base_url}}"],
+                            "path": ["reports", "employees"],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                },
+                                {
+                                    "key": "date_from",
+                                    "value": "2024-01-01"
+                                },
+                                {
+                                    "key": "date_to",
+                                    "value": "2024-12-31"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6. Confirmations Mensuelles",
+            "item": [
+                {
+                    "name": "Confirmations en attente",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/monthly-confirmations/pending",
+                            "host": ["{{base_url}}"],
+                            "path": ["monthly-confirmations", "pending"]
+                        }
+                    }
+                },
+                {
+                    "name": "Statistiques confirmations",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/monthly-confirmations/statistics",
+                            "host": ["{{base_url}}"],
+                            "path": ["monthly-confirmations", "statistics"]
+                        }
+                    }
+                },
+                {
+                    "name": "Confirmer un employé",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"mois\": 7,\n    \"annee\": 2024,\n    \"commentaire\": \"Employé présent et satisfaisant\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/employees/{{employee_id}}/monthly-confirmations",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "{{employee_id}}", "monthly-confirmations"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "7. Ré-enregistrement Employé",
+            "item": [
+                {
+                    "name": "Ré-enregistrer employé existant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"contract\": {\n        \"type_emploi\": \"Gardien\",\n        \"salaire_mensuel\": 35000,\n        \"date_debut\": \"2024-08-01\"\n    }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/employees/{{employee_id}}/register-existing",
+                            "host": ["{{base_url}}"],
+                            "path": ["employees", "{{employee_id}}", "register-existing"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "8. Profil Employeur",
+            "item": [
+                {
+                    "name": "Upload document profil",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type_document\": \"piece_identite\",\n    \"document\": \"data:application/pdf;base64,JVBERi0xLjQKJcOBw6DCgsOCw4PDhMOFw4bDh8OIw4nDisOLw4zDjcOOw4/DkA==\",\n    \"nom_document\": \"Carte_Identite.pdf\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/profile/documents",
+                            "host": ["{{base_url}}"],
+                            "path": ["profile", "documents"]
+                        }
+                    }
+                },
+                {
+                    "name": "Profil employeur",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/profile",
+                            "host": ["{{base_url}}"],
+                            "path": ["profile"]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

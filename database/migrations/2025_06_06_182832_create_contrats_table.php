@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
             $table->date('date_debut');
             $table->date('date_fin')->nullable();
-            $table->enum('type_emploi', ['Temps plein', 'Temps partiel', 'Journalier', 'Gardiennage']);
+            $table->enum('type_emploi', ['Ménage', 'Gardien', 'Jardinier', 'Coulis', 'Vendeur']);
             $table->decimal('salaire_mensuel', 10, 2);
             $table->boolean('est_actif')->default(true);
             $table->text('notes')->nullable();

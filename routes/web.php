@@ -27,10 +27,13 @@ Route::middleware('auth')->group(function () {
     // Dashboard (sans prefix admin pour correspondre au layout)
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Routes pour les autres pages
-    Route::get('/admin/employees', function () {
-        return view('admin.employees.index');
-    })->name('employees.index');
+    // Routes employés
+    Route::prefix('/admin/employees')->name('employees.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\EmployeeController::class, 'index'])->name('index');
+        Route::get('/{employee}', [App\Http\Controllers\Admin\EmployeeController::class, 'show'])->name('show');
+        Route::patch('/{employee}/toggle-status', [App\Http\Controllers\Admin\EmployeeController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/{employee}/stats', [App\Http\Controllers\Admin\EmployeeController::class, 'getStats'])->name('stats');
+    });
 
     // Routes employeurs
     Route::prefix('/admin/employers')->name('employers.')->group(function () {
