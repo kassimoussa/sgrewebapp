@@ -474,17 +474,7 @@ class AuthController extends Controller
     public function refresh(Request $request): JsonResponse
     {
         try {
-            $validatedData = $request->validate([
-                'refresh_token' => 'required|string'
-            ], [
-                'refresh_token.required' => 'Le token de rafraîchissement est requis.'
-            ]);
-
-            // Note: Laravel Sanctum ne supporte pas nativement les refresh tokens
-            // Pour une implémentation complète, il faudrait utiliser Laravel Passport
-            // ou implémenter une logique personnalisée de refresh tokens
-            
-            // Pour l'instant, on vérifie si l'utilisateur est toujours authentifié
+            // Récupérer l'utilisateur authentifié avec le token actuel
             $employer = $request->user();
             
             if (!$employer) {
@@ -494,8 +484,22 @@ class AuthController extends Controller
                 ], 401);
             }
 
+            // Vérifier si le compte est toujours actif
+            if (!$employer->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Votre compte a été désactivé. Contactez l\'administration.',
+                ], 403);
+            }
+
+            // Supprimer le token actuel
+            $request->user()->currentAccessToken()->delete();
+
             // Créer un nouveau token
             $newToken = $employer->createToken('mobile-app', ['employer'])->plainTextToken;
+
+            // Mettre à jour la date de dernière activité
+            $employer->update(['updated_at' => now()]);
 
             return response()->json([
                 'success' => true,
@@ -503,16 +507,17 @@ class AuthController extends Controller
                 'data' => [
                     'access_token' => $newToken,
                     'token_type' => 'Bearer',
-                    'expires_in' => 3600
+                    'expires_in' => 3600,
+                    'employer' => [
+                        'id' => $employer->id,
+                        'prenom' => $employer->prenom,
+                        'nom' => $employer->nom,
+                        'email' => $employer->email,
+                        'telephone' => $employer->telephone,
+                        'is_active' => $employer->is_active,
+                    ]
                 ]
             ], 200);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erreurs de validation',
-                'errors' => $e->errors(),
-            ], 422);
 
         } catch (\Exception $e) {
             return response()->json([

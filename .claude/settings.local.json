@@ -8,7 +8,8 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(rm:*)",
-      "Bash(./artisan migrate:fresh --seed)"
+      "Bash(./artisan migrate:fresh --seed)",
+      "Bash(./vendor/bin/pint:*)"
     ],
     "deny": []
   }
