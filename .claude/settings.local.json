@@ -9,7 +9,8 @@
       "Bash(rg:*)",
       "Bash(rm:*)",
       "Bash(./artisan migrate:fresh --seed)",
-      "Bash(./vendor/bin/pint:*)"
+      "Bash(./vendor/bin/pint:*)",
+      "WebFetch(domain:197.241.32.130)"
     ],
     "deny": []
   }
