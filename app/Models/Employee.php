@@ -146,6 +146,117 @@ class Employee extends Model
         );
     }
 
+    protected function photoThumbnail(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!$this->photo?->chemin_fichier) {
+                    return asset('images/default-employee.png');
+                }
+
+                $originalPath = $this->photo->chemin_fichier;
+                $pathInfo = pathinfo($originalPath);
+                $thumbnailPath = $pathInfo['dirname'] . '/thumbs/' . $pathInfo['filename'] . '_thumb.' . $pathInfo['extension'];
+                
+                if (file_exists(storage_path('app/public/' . $thumbnailPath))) {
+                    return asset('storage/' . $thumbnailPath);
+                }
+                
+                // Si le thumbnail n'existe pas, générer et retourner l'original en attendant
+                $this->generateThumbnail();
+                return asset('storage/' . $originalPath);
+            }
+        );
+    }
+
+    public function generateThumbnail(): bool
+    {
+        if (!$this->photo?->chemin_fichier) {
+            return false;
+        }
+
+        $originalPath = storage_path('app/public/' . $this->photo->chemin_fichier);
+        if (!file_exists($originalPath)) {
+            return false;
+        }
+
+        $pathInfo = pathinfo($this->photo->chemin_fichier);
+        $thumbDir = storage_path('app/public/' . $pathInfo['dirname'] . '/thumbs');
+        $thumbnailPath = $thumbDir . '/' . $pathInfo['filename'] . '_thumb.' . $pathInfo['extension'];
+
+        // Créer le dossier thumbs s'il n'existe pas
+        if (!is_dir($thumbDir)) {
+            mkdir($thumbDir, 0755, true);
+        }
+
+        // Générer le thumbnail avec GD
+        try {
+            $imageType = exif_imagetype($originalPath);
+            
+            switch ($imageType) {
+                case IMAGETYPE_JPEG:
+                    $source = imagecreatefromjpeg($originalPath);
+                    break;
+                case IMAGETYPE_PNG:
+                    $source = imagecreatefrompng($originalPath);
+                    break;
+                case IMAGETYPE_GIF:
+                    $source = imagecreatefromgif($originalPath);
+                    break;
+                default:
+                    return false;
+            }
+
+            if (!$source) return false;
+
+            $sourceWidth = imagesx($source);
+            $sourceHeight = imagesy($source);
+            
+            // Créer un thumbnail carré de 60x60 (optimisé pour l'affichage)
+            $thumbSize = 60;
+            $thumb = imagecreatetruecolor($thumbSize, $thumbSize);
+            
+            // Préserver la transparence pour PNG
+            if ($imageType === IMAGETYPE_PNG) {
+                imagealphablending($thumb, false);
+                imagesavealpha($thumb, true);
+                $transparent = imagecolorallocatealpha($thumb, 255, 255, 255, 127);
+                imagefill($thumb, 0, 0, $transparent);
+            }
+
+            // Redimensionner en gardant les proportions et centrer
+            $ratio = min($thumbSize / $sourceWidth, $thumbSize / $sourceHeight);
+            $newWidth = intval($sourceWidth * $ratio);
+            $newHeight = intval($sourceHeight * $ratio);
+            
+            $x = intval(($thumbSize - $newWidth) / 2);
+            $y = intval(($thumbSize - $newHeight) / 2);
+
+            imagecopyresampled($thumb, $source, $x, $y, 0, 0, $newWidth, $newHeight, $sourceWidth, $sourceHeight);
+
+            // Sauvegarder
+            $result = false;
+            switch ($imageType) {
+                case IMAGETYPE_JPEG:
+                    $result = imagejpeg($thumb, $thumbnailPath, 85);
+                    break;
+                case IMAGETYPE_PNG:
+                    $result = imagepng($thumb, $thumbnailPath, 6);
+                    break;
+                case IMAGETYPE_GIF:
+                    $result = imagegif($thumb, $thumbnailPath);
+                    break;
+            }
+
+            imagedestroy($source);
+            imagedestroy($thumb);
+
+            return $result;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     // Methods
     public function hasPhoto(): bool
     {

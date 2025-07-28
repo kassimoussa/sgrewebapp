@@ -5,11 +5,12 @@
             <div class="col-md-8">
                 <div class="d-flex align-items-center mb-3">
                     @if($employee->photo_url && $employee->photo_url !== asset('images/default-employee.png'))
-                        <img src="{{ $employee->photo_url }}" 
+                        <img src="{{ $employee->photo_thumbnail }}" 
                              alt="Photo {{ $employee->nom_complet }}" 
-                             class="avatar-photo-large me-3">
+                             class="avatar-photo-large me-3"
+                             loading="lazy">
                     @else
-                        <div class="avatar-circle me-3" style="width: 80px; height: 80px; font-size: 24px;">
+                        <div class="avatar-circle me-3" style="width: 60px; height: 60px; font-size: 20px;">
                             {{ substr($employee->prenom, 0, 1) }}{{ substr($employee->nom, 0, 1) }}
                         </div>
                     @endif
@@ -158,11 +159,12 @@
 @push('styles')
 <style>
     .avatar-photo-large {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--primary-color);
+        border: 2px solid var(--primary-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .avatar-circle {
