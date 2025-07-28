@@ -169,6 +169,29 @@ class Employee extends Model
         );
     }
 
+    protected function photoSmall(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!$this->photo?->chemin_fichier) {
+                    return asset('images/default-employee.png');
+                }
+
+                $originalPath = $this->photo->chemin_fichier;
+                $pathInfo = pathinfo($originalPath);
+                $smallThumbPath = $pathInfo['dirname'] . '/thumbs/' . $pathInfo['filename'] . '_small.' . $pathInfo['extension'];
+                
+                if (file_exists(storage_path('app/public/' . $smallThumbPath))) {
+                    return asset('storage/' . $smallThumbPath);
+                }
+                
+                // Si le petit thumbnail n'existe pas, générer et retourner le thumbnail normal
+                $this->generateSmallThumbnail();
+                return $this->photo_thumbnail;
+            }
+        );
+    }
+
     public function generateThumbnail(): bool
     {
         if (!$this->photo?->chemin_fichier) {
@@ -245,6 +268,94 @@ class Employee extends Model
                     break;
                 case IMAGETYPE_GIF:
                     $result = imagegif($thumb, $thumbnailPath);
+                    break;
+            }
+
+            imagedestroy($source);
+            imagedestroy($thumb);
+
+            return $result;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    public function generateSmallThumbnail(): bool
+    {
+        if (!$this->photo?->chemin_fichier) {
+            return false;
+        }
+
+        $originalPath = storage_path('app/public/' . $this->photo->chemin_fichier);
+        if (!file_exists($originalPath)) {
+            return false;
+        }
+
+        $pathInfo = pathinfo($this->photo->chemin_fichier);
+        $thumbDir = storage_path('app/public/' . $pathInfo['dirname'] . '/thumbs');
+        $smallThumbPath = $thumbDir . '/' . $pathInfo['filename'] . '_small.' . $pathInfo['extension'];
+
+        // Créer le dossier thumbs s'il n'existe pas
+        if (!is_dir($thumbDir)) {
+            mkdir($thumbDir, 0755, true);
+        }
+
+        // Générer le petit thumbnail avec GD
+        try {
+            $imageType = exif_imagetype($originalPath);
+            
+            switch ($imageType) {
+                case IMAGETYPE_JPEG:
+                    $source = imagecreatefromjpeg($originalPath);
+                    break;
+                case IMAGETYPE_PNG:
+                    $source = imagecreatefrompng($originalPath);
+                    break;
+                case IMAGETYPE_GIF:
+                    $source = imagecreatefromgif($originalPath);
+                    break;
+                default:
+                    return false;
+            }
+
+            if (!$source) return false;
+
+            $sourceWidth = imagesx($source);
+            $sourceHeight = imagesy($source);
+            
+            // Créer un petit thumbnail carré de 40x40 (pour les tableaux)
+            $thumbSize = 40;
+            $thumb = imagecreatetruecolor($thumbSize, $thumbSize);
+            
+            // Préserver la transparence pour PNG
+            if ($imageType === IMAGETYPE_PNG) {
+                imagealphablending($thumb, false);
+                imagesavealpha($thumb, true);
+                $transparent = imagecolorallocatealpha($thumb, 255, 255, 255, 127);
+                imagefill($thumb, 0, 0, $transparent);
+            }
+
+            // Redimensionner en gardant les proportions et centrer
+            $ratio = min($thumbSize / $sourceWidth, $thumbSize / $sourceHeight);
+            $newWidth = intval($sourceWidth * $ratio);
+            $newHeight = intval($sourceHeight * $ratio);
+            
+            $x = intval(($thumbSize - $newWidth) / 2);
+            $y = intval(($thumbSize - $newHeight) / 2);
+
+            imagecopyresampled($thumb, $source, $x, $y, 0, 0, $newWidth, $newHeight, $sourceWidth, $sourceHeight);
+
+            // Sauvegarder
+            $result = false;
+            switch ($imageType) {
+                case IMAGETYPE_JPEG:
+                    $result = imagejpeg($thumb, $smallThumbPath, 85);
+                    break;
+                case IMAGETYPE_PNG:
+                    $result = imagepng($thumb, $smallThumbPath, 6);
+                    break;
+                case IMAGETYPE_GIF:
+                    $result = imagegif($thumb, $smallThumbPath);
                     break;
             }
 

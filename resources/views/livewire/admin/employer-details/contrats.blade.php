@@ -47,7 +47,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if($contrat->employee->photo_url && $contrat->employee->photo_url !== asset('images/default-employee.png'))
-                                        <img src="{{ $contrat->employee->photo_thumbnail }}" 
+                                        <img src="{{ $contrat->employee->photo_small }}" 
                                              alt="Photo {{ $contrat->employee->nom_complet }}" 
                                              class="avatar-photo-small me-2"
                                              loading="lazy">
