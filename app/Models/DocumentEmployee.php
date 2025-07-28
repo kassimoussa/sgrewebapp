@@ -39,7 +39,18 @@ class DocumentEmployee extends Model
     protected function url(): Attribute
     {
         return Attribute::make(
-            get: fn () => Storage::url($this->chemin_fichier),
+            get: function () {
+                if (!$this->chemin_fichier) {
+                    return null;
+                }
+                
+                // Vérifier si le fichier existe
+                if (!Storage::disk('public')->exists($this->chemin_fichier)) {
+                    return null;
+                }
+                
+                return Storage::disk('public')->url($this->chemin_fichier);
+            },
         );
     }
 
@@ -87,13 +98,18 @@ class DocumentEmployee extends Model
 
     public function exists(): bool
     {
-        return Storage::exists($this->chemin_fichier);
+        if (!$this->chemin_fichier) {
+            return false;
+        }
+        
+        return Storage::disk('public')->exists($this->chemin_fichier);
     }
 
     public function delete(): bool
     {
+        // Supprimer le fichier physique avant de supprimer l'enregistrement
         if ($this->exists()) {
-            Storage::delete($this->chemin_fichier);
+            Storage::disk('public')->delete($this->chemin_fichier);
         }
         
         return parent::delete();
