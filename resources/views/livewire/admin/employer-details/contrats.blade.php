@@ -46,9 +46,16 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-circle me-2" style="width: 40px; height: 40px; font-size: 14px;">
-                                        {{ substr($contrat->employee->prenom, 0, 1) }}{{ substr($contrat->employee->nom, 0, 1) }}
-                                    </div>
+                                    @if($contrat->employee->photo_url && $contrat->employee->photo_url !== asset('images/default-employee.png'))
+                                        <img src="{{ $contrat->employee->photo_thumbnail }}" 
+                                             alt="Photo {{ $contrat->employee->nom_complet }}" 
+                                             class="avatar-photo-small me-2"
+                                             loading="lazy">
+                                    @else
+                                        <div class="avatar-circle me-2" style="width: 40px; height: 40px; font-size: 14px;">
+                                            {{ substr($contrat->employee->prenom, 0, 1) }}{{ substr($contrat->employee->nom, 0, 1) }}
+                                        </div>
+                                    @endif
                                     <div>
                                         <strong>{{ $contrat->employee->nom_complet }}</strong><br>
                                         <small class="text-muted">
@@ -102,44 +109,56 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        Actions
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-eye me-2"></i>Voir détails employé
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-file-alt me-2"></i>Voir confirmations
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        @if($contrat->est_actif)
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('employees.show', $contrat->employee) }}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Voir le profil de {{ $contrat->employee->nom_complet }}">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
                                             <li>
-                                                <button 
-                                                    class="dropdown-item text-danger" 
-                                                    wire:click="terminateContract({{ $contrat->id }})"
-                                                    onclick="return confirm('Êtes-vous sûr de vouloir terminer ce contrat ?')"
-                                                >
-                                                    <i class="fas fa-stop me-2"></i>Terminer contrat
-                                                </button>
+                                                <a class="dropdown-item" href="{{ route('employees.show', $contrat->employee) }}">
+                                                    <i class="fas fa-user me-2"></i>Profil complet
+                                                </a>
                                             </li>
-                                        @else
                                             <li>
-                                                <button 
-                                                    class="dropdown-item text-success" 
-                                                    wire:click="reactivateContract({{ $contrat->id }})"
-                                                    onclick="return confirm('Êtes-vous sûr de vouloir réactiver ce contrat ?')"
-                                                >
-                                                    <i class="fas fa-play me-2"></i>Réactiver contrat
-                                                </button>
+                                                <a class="dropdown-item" href="{{ route('employees.show', $contrat->employee) }}?tab=confirmations">
+                                                    <i class="fas fa-file-alt me-2"></i>Confirmations
+                                                </a>
                                             </li>
-                                        @endif
-                                    </ul>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('employees.show', $contrat->employee) }}?tab=documents">
+                                                    <i class="fas fa-folder me-2"></i>Documents
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            @if($contrat->est_actif)
+                                                <li>
+                                                    <button 
+                                                        class="dropdown-item text-danger" 
+                                                        wire:click="terminateContract({{ $contrat->id }})"
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir terminer ce contrat ?')"
+                                                    >
+                                                        <i class="fas fa-stop me-2"></i>Terminer contrat
+                                                    </button>
+                                                </li>
+                                            @else
+                                                <li>
+                                                    <button 
+                                                        class="dropdown-item text-success" 
+                                                        wire:click="reactivateContract({{ $contrat->id }})"
+                                                        onclick="return confirm('Êtes-vous sûr de vouloir réactiver ce contrat ?')"
+                                                    >
+                                                        <i class="fas fa-play me-2"></i>Réactiver contrat
+                                                    </button>
+                                                </li>
+                                            @endif
+                                        </ul>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -226,3 +245,26 @@
         </div>
     @endif
 </div>
+
+@push('styles')
+<style>
+    .avatar-photo-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .avatar-circle {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+</style>
+@endpush
