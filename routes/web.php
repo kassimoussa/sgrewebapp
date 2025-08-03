@@ -37,6 +37,11 @@ Route::middleware('auth')->group(function () {
         // Routes pour attestations
         Route::post('/{employee}/generate-attestation', [App\Http\Controllers\Admin\EmployeeController::class, 'generateAttestation'])->name('generate-attestation');
         Route::get('/{employee}/download-attestation', [App\Http\Controllers\Admin\EmployeeController::class, 'downloadAttestation'])->name('download-attestation');
+        
+        // Routes pour permis de travail
+        Route::post('/{employee}/generate-work-permit', [App\Http\Controllers\Admin\EmployeeController::class, 'generateWorkPermit'])->name('generate-work-permit');
+        Route::get('/{employee}/download-work-permit', [App\Http\Controllers\Admin\EmployeeController::class, 'downloadWorkPermit'])->name('download-work-permit');
+        
         Route::get('/{employee}/document-status', [App\Http\Controllers\Admin\EmployeeController::class, 'getDocumentStatus'])->name('document-status');
     });
 

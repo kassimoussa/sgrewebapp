@@ -121,6 +121,65 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Générer une carte de permis de travail pour un employé avec passeport
+     */
+    public function generateWorkPermit(Employee $employee): RedirectResponse
+    {
+        try {
+            // Vérifier si l'employé a un passeport
+            if (!$employee->hasPassport()) {
+                return back()->with('error', 'L\'employé doit avoir un passeport valide pour générer un permis de travail.');
+            }
+
+            $attestationService = new AttestationService();
+
+            // Vérifier si un permis valide existe déjà
+            if ($attestationService->hasValidWorkPermit($employee)) {
+                return back()->with('info', 'Un permis de travail valide existe déjà pour cet employé.');
+            }
+
+            // Générer le permis de travail
+            $permitPath = $attestationService->generateWorkPermitCard($employee);
+            
+            return back()->with('success', 'Carte de permis de travail générée avec succès.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors de la génération du permis de travail: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Télécharger le permis de travail d'un employé
+     */
+    public function downloadWorkPermit(Employee $employee)
+    {
+        try {
+            $attestationService = new AttestationService();
+            
+            if (!$attestationService->hasValidWorkPermit($employee)) {
+                return back()->with('error', 'Aucun permis de travail valide trouvé pour cet employé.');
+            }
+
+            $permit = $employee->documents()
+                ->where('type_document', 'permis_travail')
+                ->latest()
+                ->first();
+
+            if (!$permit || !Storage::disk('public')->exists($permit->chemin_fichier)) {
+                return back()->with('error', 'Le fichier de permis de travail est introuvable.');
+            }
+
+            $filePath = storage_path('app/public/' . $permit->chemin_fichier);
+            $fileName = "permis_travail_{$employee->nom}_{$employee->prenom}.pdf";
+
+            return response()->download($filePath, $fileName);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors du téléchargement: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Obtenir le statut des documents d'un employé (AJAX)
      */
     public function getDocumentStatus(Employee $employee)

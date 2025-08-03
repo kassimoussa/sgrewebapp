@@ -81,6 +81,7 @@ class DocumentEmployee extends Model
                 'certificat_medical' => 'Certificat médical',
                 'passeport' => 'Passeport',
                 'attestation_identite' => 'Attestation d\'identité',
+                'permis_travail' => 'Permis de travail',
                 'autre' => 'Autre document',
                 default => 'Document',
             },

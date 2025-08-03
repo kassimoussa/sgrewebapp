@@ -391,7 +391,7 @@ class Employee extends Model
 
     public function needsIdentityAttestation(): bool
     {
-        return !$this->hasPassport() && !$this->hasIdentityDocument();
+        return !$this->hasPassport();
     }
 
     public function getDocumentStatus(): string

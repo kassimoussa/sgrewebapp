@@ -42,6 +42,8 @@ class EmployeeDetails extends Component
             'needs_attestation' => $this->employee->needsIdentityAttestation(),
             'has_valid_attestation' => $attestationService->hasValidAttestation($this->employee),
             'attestation_url' => $attestationService->getValidAttestationUrl($this->employee),
+            'has_valid_work_permit' => $attestationService->hasValidWorkPermit($this->employee),
+            'work_permit_url' => $attestationService->getValidWorkPermitUrl($this->employee),
         ];
     }
 

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('documents_employees', function (Blueprint $table) {
-            // Modifier l'enum pour ajouter 'passeport' et 'attestation_identite'
+            // Modifier l'enum pour ajouter 'permis_travail'
             $table->enum('type_document', [
                 'piece_identite', 
                 'photo', 
@@ -31,11 +31,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('documents_employees', function (Blueprint $table) {
-            // Revenir à l'enum original
+            // Revenir à l'enum sans permis_travail
             $table->enum('type_document', [
                 'piece_identite', 
                 'photo', 
                 'certificat_medical', 
+                'passeport',
+                'attestation_identite',
                 'autre'
             ])->change();
         });
