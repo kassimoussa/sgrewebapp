@@ -72,7 +72,15 @@ class AttestationService
                             '--disable-background-timer-throttling',
                             '--disable-backgrounding-occluded-windows',
                             '--disable-renderer-backgrounding',
-                            '--user-data-dir=' . $userDataDir
+                            '--user-data-dir=' . $userDataDir,
+                            '--headless',
+                            '--disable-web-security',
+                            '--disable-features=VizDisplayCompositor',
+                            '--run-all-compositor-stages-before-draw',
+                            '--disable-crash-reporter',
+                            '--disable-logging',
+                            '--disable-extensions',
+                            '--single-process'
                         ]);
                     break;
                 }
@@ -213,7 +221,15 @@ class AttestationService
                             '--disable-background-timer-throttling',
                             '--disable-backgrounding-occluded-windows',
                             '--disable-renderer-backgrounding',
-                            '--user-data-dir=' . $userDataDir
+                            '--user-data-dir=' . $userDataDir,
+                            '--headless',
+                            '--disable-web-security',
+                            '--disable-features=VizDisplayCompositor',
+                            '--run-all-compositor-stages-before-draw',
+                            '--disable-crash-reporter',
+                            '--disable-logging',
+                            '--disable-extensions',
+                            '--single-process'
                         ]);
                     break;
                 }
