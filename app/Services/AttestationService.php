@@ -39,12 +39,31 @@ class AttestationService
         }
 
         // Générer le PDF avec Browsershot
-        Browsershot::html($html)
+        $browsershot = Browsershot::html($html)
             ->format('A4')
             ->margins(20, 20, 20, 20)
             ->showBackground()
-            ->waitUntilNetworkIdle()
-            ->save($fullPath);
+            ->waitUntilNetworkIdle();
+
+        // Configuration spécifique pour serveur Linux/Ubuntu
+        if (PHP_OS_FAMILY === 'Linux') {
+            // Essayer différents chemins Chrome/Chromium sur Linux
+            $chromePaths = [
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium'
+            ];
+            
+            foreach ($chromePaths as $path) {
+                if (file_exists($path)) {
+                    $browsershot->setChromePath($path);
+                    break;
+                }
+            }
+        }
+
+        $browsershot->save($fullPath);
 
         // Enregistrer le document en base
         $employee->documents()->create([
@@ -145,12 +164,31 @@ class AttestationService
         }
 
         // Générer le PDF avec Browsershot
-        Browsershot::html($html)
+        $browsershot = Browsershot::html($html)
             ->format('A4')
             ->margins(10, 10, 10, 10)
             ->showBackground()
-            ->waitUntilNetworkIdle()
-            ->save($fullPath);
+            ->waitUntilNetworkIdle();
+
+        // Configuration spécifique pour serveur Linux/Ubuntu
+        if (PHP_OS_FAMILY === 'Linux') {
+            // Essayer différents chemins Chrome/Chromium sur Linux
+            $chromePaths = [
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium'
+            ];
+            
+            foreach ($chromePaths as $path) {
+                if (file_exists($path)) {
+                    $browsershot->setChromePath($path);
+                    break;
+                }
+            }
+        }
+
+        $browsershot->save($fullPath);
 
         // Enregistrer le document en base
         $employee->documents()->create([
