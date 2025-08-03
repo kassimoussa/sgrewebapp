@@ -80,7 +80,10 @@ class AttestationService
                             '--disable-crash-reporter',
                             '--disable-logging',
                             '--disable-extensions',
-                            '--single-process'
+                            '--single-process',
+                            '--disable-breakpad',
+                            '--no-zygote',
+                            '--disable-software-rasterizer'
                         ]);
                     break;
                 }
@@ -229,7 +232,10 @@ class AttestationService
                             '--disable-crash-reporter',
                             '--disable-logging',
                             '--disable-extensions',
-                            '--single-process'
+                            '--single-process',
+                            '--disable-breakpad',
+                            '--no-zygote',
+                            '--disable-software-rasterizer'
                         ]);
                     break;
                 }
