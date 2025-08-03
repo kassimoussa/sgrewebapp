@@ -57,7 +57,17 @@ class AttestationService
             
             foreach ($chromePaths as $path) {
                 if (file_exists($path)) {
-                    $browsershot->setChromePath($path);
+                    $browsershot->setChromePath($path)
+                        ->setOption('args', [
+                            '--no-sandbox',
+                            '--disable-setuid-sandbox',
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--no-first-run',
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding'
+                        ]);
                     break;
                 }
             }
@@ -182,7 +192,17 @@ class AttestationService
             
             foreach ($chromePaths as $path) {
                 if (file_exists($path)) {
-                    $browsershot->setChromePath($path);
+                    $browsershot->setChromePath($path)
+                        ->setOption('args', [
+                            '--no-sandbox',
+                            '--disable-setuid-sandbox',
+                            '--disable-dev-shm-usage',
+                            '--disable-gpu',
+                            '--no-first-run',
+                            '--disable-background-timer-throttling',
+                            '--disable-backgrounding-occluded-windows',
+                            '--disable-renderer-backgrounding'
+                        ]);
                     break;
                 }
             }
