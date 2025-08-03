@@ -57,6 +57,11 @@ class AttestationService
             
             foreach ($chromePaths as $path) {
                 if (file_exists($path)) {
+                    $userDataDir = storage_path('app/chrome-user-data');
+                    if (!is_dir($userDataDir)) {
+                        mkdir($userDataDir, 0755, true);
+                    }
+                    
                     $browsershot->setChromePath($path)
                         ->setOption('args', [
                             '--no-sandbox',
@@ -66,7 +71,8 @@ class AttestationService
                             '--no-first-run',
                             '--disable-background-timer-throttling',
                             '--disable-backgrounding-occluded-windows',
-                            '--disable-renderer-backgrounding'
+                            '--disable-renderer-backgrounding',
+                            '--user-data-dir=' . $userDataDir
                         ]);
                     break;
                 }
@@ -192,6 +198,11 @@ class AttestationService
             
             foreach ($chromePaths as $path) {
                 if (file_exists($path)) {
+                    $userDataDir = storage_path('app/chrome-user-data');
+                    if (!is_dir($userDataDir)) {
+                        mkdir($userDataDir, 0755, true);
+                    }
+                    
                     $browsershot->setChromePath($path)
                         ->setOption('args', [
                             '--no-sandbox',
@@ -201,7 +212,8 @@ class AttestationService
                             '--no-first-run',
                             '--disable-background-timer-throttling',
                             '--disable-backgrounding-occluded-windows',
-                            '--disable-renderer-backgrounding'
+                            '--disable-renderer-backgrounding',
+                            '--user-data-dir=' . $userDataDir
                         ]);
                     break;
                 }
