@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use App\Services\AttestationService;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -56,6 +59,134 @@ class EmployeeController extends Controller
         ];
 
         return view('admin.employees.show', compact('employee', 'stats'));
+    }
+
+    /**
+     * Générer une attestation d'identité pour un employé
+     */
+    public function generateAttestation(Employee $employee): RedirectResponse
+    {
+        try {
+            // Vérifier si l'employé a déjà un passeport
+            if ($employee->hasPassport()) {
+                return back()->with('error', 'Cet employé possède déjà un passeport. Une attestation n\'est pas nécessaire.');
+            }
+
+            $attestationService = new AttestationService();
+
+            // Vérifier si une attestation valide existe déjà
+            if ($attestationService->hasValidAttestation($employee)) {
+                return back()->with('info', 'Une attestation valide existe déjà pour cet employé.');
+            }
+
+            // Générer l'attestation
+            $attestationPath = $attestationService->generateIdentityAttestation($employee);
+            
+            return back()->with('success', 'Attestation d\'identité générée avec succès. L\'employé peut la télécharger.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors de la génération de l\'attestation: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Télécharger l'attestation d'un employé
+     */
+    public function downloadAttestation(Employee $employee)
+    {
+        try {
+            $attestationService = new AttestationService();
+            
+            if (!$attestationService->hasValidAttestation($employee)) {
+                return back()->with('error', 'Aucune attestation valide trouvée pour cet employé.');
+            }
+
+            $attestation = $employee->documents()
+                ->where('type_document', 'attestation_identite')
+                ->latest()
+                ->first();
+
+            if (!$attestation || !Storage::disk('public')->exists($attestation->chemin_fichier)) {
+                return back()->with('error', 'Le fichier d\'attestation est introuvable.');
+            }
+
+            $filePath = storage_path('app/public/' . $attestation->chemin_fichier);
+            $fileName = "attestation_identite_{$employee->nom}_{$employee->prenom}.pdf";
+
+            return response()->download($filePath, $fileName);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erreur lors du téléchargement: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtenir le statut des documents d'un employé (AJAX)
+     */
+    public function getDocumentStatus(Employee $employee)
+    {
+        try {
+            $attestationService = new AttestationService();
+            
+            $status = [
+                'has_passport' => $employee->hasPassport(),
+                'has_identity_document' => $employee->hasIdentityDocument(),
+                'document_status' => $employee->getDocumentStatus(),
+                'needs_attestation' => $employee->needsIdentityAttestation(),
+                'has_valid_attestation' => $attestationService->hasValidAttestation($employee),
+                'attestation_url' => $attestationService->getValidAttestationUrl($employee),
+            ];
+
+            // Déterminer les actions possibles
+            $actions = [];
+            
+            if ($employee->hasPassport()) {
+                $actions[] = [
+                    'type' => 'success',
+                    'message' => 'Employé avec passeport - Éligible pour permis renouvelable',
+                    'button' => null
+                ];
+            } elseif ($attestationService->hasValidAttestation($employee)) {
+                $actions[] = [
+                    'type' => 'warning',
+                    'message' => 'Attestation valide - Employé doit obtenir un passeport avant expiration',
+                    'button' => [
+                        'text' => 'Télécharger Attestation',
+                        'url' => route('admin.employees.download-attestation', $employee),
+                        'class' => 'btn btn-outline-primary btn-sm'
+                    ]
+                ];
+            } elseif ($employee->hasIdentityDocument()) {
+                $actions[] = [
+                    'type' => 'info',
+                    'message' => 'Pièce d\'identité disponible - Peut générer une attestation',
+                    'button' => [
+                        'text' => 'Générer Attestation',
+                        'url' => route('admin.employees.generate-attestation', $employee),
+                        'class' => 'btn btn-primary btn-sm'
+                    ]
+                ];
+            } else {
+                $actions[] = [
+                    'type' => 'danger',
+                    'message' => 'Aucun document - Doit fournir une pièce d\'identité',
+                    'button' => null
+                ];
+            }
+
+            $status['actions'] = $actions;
+
+            return response()->json([
+                'success' => true,
+                'data' => $status
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la vérification du statut: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -28,15 +28,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Routes employés
-    Route::prefix('/admin/employees')->name('employees.')->group(function () {
+    Route::prefix('/admin/employees')->name('admin.employees.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\EmployeeController::class, 'index'])->name('index');
         Route::get('/{employee}', [App\Http\Controllers\Admin\EmployeeController::class, 'show'])->name('show');
         Route::patch('/{employee}/toggle-status', [App\Http\Controllers\Admin\EmployeeController::class, 'toggleStatus'])->name('toggle-status');
         Route::get('/{employee}/stats', [App\Http\Controllers\Admin\EmployeeController::class, 'getStats'])->name('stats');
+        
+        // Routes pour attestations
+        Route::post('/{employee}/generate-attestation', [App\Http\Controllers\Admin\EmployeeController::class, 'generateAttestation'])->name('generate-attestation');
+        Route::get('/{employee}/download-attestation', [App\Http\Controllers\Admin\EmployeeController::class, 'downloadAttestation'])->name('download-attestation');
+        Route::get('/{employee}/document-status', [App\Http\Controllers\Admin\EmployeeController::class, 'getDocumentStatus'])->name('document-status');
     });
 
     // Routes employeurs
-    Route::prefix('/admin/employers')->name('employers.')->group(function () {
+    Route::prefix('/admin/employers')->name('admin.employers.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\EmployerController::class, 'index'])->name('index');
         Route::get('/{employer}', [App\Http\Controllers\Admin\EmployerController::class, 'show'])->name('show');
         Route::patch('/{employer}/toggle-status', [App\Http\Controllers\Admin\EmployerController::class, 'toggleStatus'])->name('toggle-status');

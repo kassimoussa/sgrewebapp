@@ -29,7 +29,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     <h6 class="mb-1">
-                                        <a href="{{ route('employers.show', $contrat->employer) }}" 
+                                        <a href="{{ route('admin.employers.show', $contrat->employer) }}" 
                                            class="text-decoration-none">
                                             {{ $contrat->employer->nom_complet }}
                                         </a>

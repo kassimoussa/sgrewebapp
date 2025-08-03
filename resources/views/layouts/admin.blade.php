@@ -215,14 +215,14 @@
                     <div class="menu-section-title">Menu principal</div>
                     <ul class="list-unstyled components">
                         <li class="{{ request()->is('admin/employees*') ? 'active' : '' }}">
-                            <a href="{{ route('employees.index') }}" data-bs-toggle="tooltip" data-bs-placement="right"
+                            <a href="{{ route('admin.employees.index') }}" data-bs-toggle="tooltip" data-bs-placement="right"
                                 title="La liste des employés étrangers ">
                                 <i class="fas fa-user-plus"></i>
                                 <span>Employés</span>
                             </a>
                         </li>
                         <li class="{{ request()->is('admin/employers*') ? 'active' : '' }}">
-                            <a href="{{ route('employers.index') }}" data-bs-toggle="tooltip" data-bs-placement="right"
+                            <a href="{{ route('admin.employers.index') }}" data-bs-toggle="tooltip" data-bs-placement="right"
                                 title="La liste des employeurs">
                                 <i class="fas fa-users-gear"></i>
                                 <span>Employeurs</span>
@@ -314,6 +314,39 @@
 
             <!-- Contenu de la page -->
             <div id="content">
+                <!-- Messages Flash -->
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('warning'))
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ session('warning') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session('info'))
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ session('info') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
                 @yield('content')
             </div>
         </div>

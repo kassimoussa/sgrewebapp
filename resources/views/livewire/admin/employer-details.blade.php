@@ -35,7 +35,7 @@
                     <i class="fas fa-{{ $employer->is_active ? 'ban' : 'check' }} me-1"></i>
                     {{ $employer->is_active ? 'Désactiver' : 'Activer' }}
                 </button>
-                <a href="{{ route('employers.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('admin.employers.index') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-1"></i>Retour
                 </a>
             </div>

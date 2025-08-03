@@ -79,6 +79,8 @@ class DocumentEmployee extends Model
                 'piece_identite' => 'Pièce d\'identité',
                 'photo' => 'Photo',
                 'certificat_medical' => 'Certificat médical',
+                'passeport' => 'Passeport',
+                'attestation_identite' => 'Attestation d\'identité',
                 'autre' => 'Autre document',
                 default => 'Document',
             },

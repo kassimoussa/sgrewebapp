@@ -110,7 +110,7 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('employees.show', $contrat->employee) }}" 
+                                    <a href="{{ route('admin.employees.show', $contrat->employee) }}" 
                                        class="btn btn-sm btn-outline-primary"
                                        title="Voir le profil de {{ $contrat->employee->nom_complet }}">
                                         <i class="fas fa-eye"></i>
@@ -121,17 +121,17 @@
                                         </button>
                                         <ul class="dropdown-menu">
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('employees.show', $contrat->employee) }}">
+                                                <a class="dropdown-item" href="{{ route('admin.employees.show', $contrat->employee) }}">
                                                     <i class="fas fa-user me-2"></i>Profil complet
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('employees.show', $contrat->employee) }}?tab=confirmations">
+                                                <a class="dropdown-item" href="{{ route('admin.employees.show', $contrat->employee) }}?tab=confirmations">
                                                     <i class="fas fa-file-alt me-2"></i>Confirmations
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('employees.show', $contrat->employee) }}?tab=documents">
+                                                <a class="dropdown-item" href="{{ route('admin.employees.show', $contrat->employee) }}?tab=documents">
                                                     <i class="fas fa-folder me-2"></i>Documents
                                                 </a>
                                             </li>

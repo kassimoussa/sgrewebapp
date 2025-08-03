@@ -72,6 +72,11 @@ class Employee extends Model
         return $this->hasOne(DocumentEmployee::class)->where('type_document', 'piece_identite');
     }
 
+    public function passport(): HasOne
+    {
+        return $this->hasOne(DocumentEmployee::class)->where('type_document', 'passeport');
+    }
+
     public function confirmations(): HasManyThrough
     {
         return $this->hasManyThrough(ConfirmationMensuelle::class, Contrat::class);
@@ -377,6 +382,29 @@ class Employee extends Model
     public function hasIdentityDocument(): bool
     {
         return $this->identityDocument !== null;
+    }
+
+    public function hasPassport(): bool
+    {
+        return $this->passport !== null;
+    }
+
+    public function needsIdentityAttestation(): bool
+    {
+        return !$this->hasPassport() && !$this->hasIdentityDocument();
+    }
+
+    public function getDocumentStatus(): string
+    {
+        if ($this->hasPassport()) {
+            return 'renewable_permit'; // Permis renouvelable
+        }
+        
+        if ($this->hasIdentityDocument()) {
+            return 'temporary_permit'; // Permis temporaire avec pièce d'identité
+        }
+        
+        return 'needs_attestation'; // Besoin d'attestation d'identité
     }
 
     public function hasActiveContract(): bool

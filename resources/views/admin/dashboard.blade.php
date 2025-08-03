@@ -112,7 +112,7 @@
                 @endif
             </div>
             <div class="card-footer">
-                <a href="{{ route('employers.index') }}" class="btn btn-sm btn-outline-primary">
+                <a href="{{ route('admin.employers.index') }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-eye me-1"></i>
                     Voir tous les employeurs
                 </a>
@@ -169,7 +169,7 @@
                 @endif
             </div>
             <div class="card-footer">
-                <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
+                <a href="{{ route('admin.employees.index') }}" class="btn btn-sm btn-outline-success">
                     <i class="fas fa-eye me-1"></i>
                     Voir tous les employés
                 </a>
@@ -188,13 +188,13 @@
             </h5>
             <div class="row">
                 <div class="col-md-3 mb-3">
-                    <a href="{{ route('employers.index') }}" class="btn btn-outline-primary w-100 py-3">
+                    <a href="{{ route('admin.employers.index') }}" class="btn btn-outline-primary w-100 py-3">
                         <i class="fas fa-user-tie fa-2x d-block mb-2"></i>
                         Gérer les employeurs
                     </a>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <a href="{{ route('employees.index') }}" class="btn btn-outline-success w-100 py-3">
+                    <a href="{{ route('admin.employees.index') }}" class="btn btn-outline-success w-100 py-3">
                         <i class="fas fa-users fa-2x d-block mb-2"></i>
                         Gérer les employés
                     </a>

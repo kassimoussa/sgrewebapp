@@ -1,4 +1,86 @@
 <div>
+    <!-- Section Statut Passeport et Attestation -->
+    <div class="card mb-4 border-{{ $this->documentStatus['has_passport'] ? 'success' : ($this->documentStatus['has_valid_attestation'] ? 'warning' : 'danger') }}">
+        <div class="card-header bg-{{ $this->documentStatus['has_passport'] ? 'success' : ($this->documentStatus['has_valid_attestation'] ? 'warning' : 'danger') }} text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-{{ $this->documentStatus['has_passport'] ? 'passport' : 'id-card' }} me-2"></i>
+                Statut des Documents d'Identité
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    @if($this->documentStatus['has_passport'])
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Employé avec passeport</strong>
+                        </div>
+                        <p class="text-muted mb-0">
+                            Cet employé possède un passeport valide. Il est éligible pour un permis de travail renouvelable.
+                        </p>
+                    @elseif($this->documentStatus['has_valid_attestation'])
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            <strong>Attestation d'identité valide</strong>
+                        </div>
+                        <p class="text-muted mb-2">
+                            Une attestation d'identité a été générée. <strong>L'employé doit obtenir un passeport avant expiration.</strong>
+                        </p>
+                        <div class="alert alert-warning py-2 mb-0">
+                            <small>
+                                <i class="fas fa-clock me-1"></i>
+                                Valide jusqu'à {{ now()->addYear()->format('d/m/Y') }}
+                            </small>
+                        </div>
+                    @elseif($this->documentStatus['has_identity_document'])
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-info-circle text-info me-2"></i>
+                            <strong>Pièce d'identité disponible</strong>
+                        </div>
+                        <p class="text-muted mb-0">
+                            L'employé a fourni une pièce d'identité. Vous pouvez générer une attestation d'identité temporaire.
+                        </p>
+                    @else
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            <strong>Aucun document d'identité</strong>
+                        </div>
+                        <p class="text-muted mb-0">
+                            L'employé doit fournir une pièce d'identité avant de pouvoir générer une attestation.
+                        </p>
+                    @endif
+                </div>
+                <div class="col-md-4 text-end">
+                    @if($this->documentStatus['has_passport'])
+                        <span class="badge bg-success fs-6 py-2 px-3">
+                            <i class="fas fa-passport me-1"></i>Permis Renouvelable
+                        </span>
+                    @elseif($this->documentStatus['has_valid_attestation'])
+                        <div class="d-grid gap-2">
+                            <a href="{{ route('admin.employees.download-attestation', $employee) }}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-download me-1"></i>Télécharger Attestation
+                            </a>
+                        </div>
+                    @elseif($this->documentStatus['has_identity_document'])
+                        <form action="{{ route('admin.employees.generate-attestation', $employee) }}" 
+                              method="POST" 
+                              onsubmit="return confirm('Générer une attestation d\'identité pour cet employé ?')">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-file-signature me-1"></i>Générer Attestation
+                            </button>
+                        </form>
+                    @else
+                        <span class="badge bg-danger fs-6 py-2 px-3">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Document Requis
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if($employee->documents->count() > 0)
         <div class="row">
             @foreach($employee->documents as $document)

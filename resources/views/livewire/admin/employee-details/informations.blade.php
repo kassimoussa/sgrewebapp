@@ -80,7 +80,7 @@
                     <div class="col-md-6">
                         <div class="info-item">
                             <strong>Employeur :</strong>
-                            <a href="{{ route('employers.show', $employee->activeContrat->employer) }}" 
+                            <a href="{{ route('admin.employers.show', $employee->activeContrat->employer) }}" 
                                class="text-decoration-none">
                                 {{ $employee->activeContrat->employer->nom_complet }}
                             </a>

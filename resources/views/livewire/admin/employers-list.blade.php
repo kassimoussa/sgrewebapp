@@ -208,7 +208,7 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         {{-- Voir détails --}}
-                                        <a href="{{ route('employers.show', $employer->id) }}" 
+                                        <a href="{{ route('admin.employers.show', $employer->id) }}" 
                                            class="btn btn-sm btn-outline-primary"
                                            title="Voir les détails">
                                             <i class="fas fa-eye"></i>

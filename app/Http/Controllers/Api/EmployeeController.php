@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use App\Services\AttestationService;
 
 class EmployeeController extends Controller
 {
@@ -72,6 +73,9 @@ class EmployeeController extends Controller
                 $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
                 $employee->setAttribute('age', Carbon::parse($employee->date_naissance)->age);
                 $employee->setAttribute('needs_confirmation', $this->needsMonthlyConfirmation($employee->activeContrat));
+                $employee->setAttribute('document_status', $employee->getDocumentStatus());
+                $employee->setAttribute('has_passport', $employee->hasPassport());
+                $employee->setAttribute('needs_attestation', $employee->needsIdentityAttestation());
                 return $employee;
             });
 
@@ -119,6 +123,7 @@ class EmployeeController extends Controller
             // Documents (base64 ou fichiers)
             'photo' => 'string', // Base64 de l'image
             'piece_identite' => 'string', // Base64 du document
+            'passeport' => 'string', // Base64 du passeport
         ], [
             'prenom.required' => 'Le prénom est requis.',
             'nom.required' => 'Le nom est requis.',
@@ -179,6 +184,10 @@ class EmployeeController extends Controller
                 $this->saveBase64Document($employee->id, 'piece_identite', $request->piece_identite);
             }
 
+            if ($request->passeport) {
+                $this->saveBase64Document($employee->id, 'passeport', $request->passeport);
+            }
+
             DB::commit();
 
             // Charger les relations pour la réponse
@@ -202,6 +211,138 @@ class EmployeeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de l\'enregistrement de l\'employé',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Générer une attestation d'identité pour un employé
+     * POST /api/v1/employees/{id}/generate-attestation
+     */
+    public function generateAttestation(Request $request, $id): JsonResponse
+    {
+        try {
+            $employer = $request->user();
+            
+            $employee = Employee::with(['nationality', 'activeContrat.employer'])
+                ->whereHas('contrats', function($query) use ($employer) {
+                    $query->where('employer_id', $employer->id);
+                })
+                ->find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employé non trouvé ou vous n\'avez pas l\'autorisation',
+                ], 404);
+            }
+
+            // Vérifier si l'employé a déjà un passeport
+            if ($employee->hasPassport()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cet employé possède déjà un passeport. Une attestation n\'est pas nécessaire.',
+                ], 400);
+            }
+
+            $attestationService = new AttestationService();
+
+            // Vérifier si une attestation valide existe déjà
+            if ($attestationService->hasValidAttestation($employee)) {
+                $attestationUrl = $attestationService->getValidAttestationUrl($employee);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Une attestation valide existe déjà',
+                    'data' => [
+                        'employee_id' => $employee->id,
+                        'attestation_url' => $attestationUrl,
+                        'status' => 'existing',
+                    ],
+                ]);
+            }
+
+            // Générer une nouvelle attestation
+            $attestationPath = $attestationService->generateIdentityAttestation($employee);
+            $attestationUrl = Storage::url($attestationPath);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attestation d\'identité générée avec succès',
+                'data' => [
+                    'employee_id' => $employee->id,
+                    'employee_name' => $employee->nom_complet,
+                    'attestation_url' => $attestationUrl,
+                    'status' => 'generated',
+                    'validity_period' => now()->addYear()->format('d/m/Y'),
+                    'warning' => 'Cette attestation est valable 1 an. L\'employé doit obtenir un passeport avant expiration.',
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération de l\'attestation',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Vérifier le statut de l'attestation d'un employé
+     * GET /api/v1/employees/{id}/attestation-status
+     */
+    public function getAttestationStatus(Request $request, $id): JsonResponse
+    {
+        try {
+            $employer = $request->user();
+            
+            $employee = Employee::with(['nationality', 'activeContrat.employer'])
+                ->whereHas('contrats', function($query) use ($employer) {
+                    $query->where('employer_id', $employer->id);
+                })
+                ->find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employé non trouvé ou vous n\'avez pas l\'autorisation',
+                ], 404);
+            }
+
+            $attestationService = new AttestationService();
+            
+            $status = [
+                'employee_id' => $employee->id,
+                'has_passport' => $employee->hasPassport(),
+                'has_identity_document' => $employee->hasIdentityDocument(),
+                'document_status' => $employee->getDocumentStatus(),
+                'needs_attestation' => $employee->needsIdentityAttestation(),
+                'has_valid_attestation' => $attestationService->hasValidAttestation($employee),
+                'attestation_url' => $attestationService->getValidAttestationUrl($employee),
+            ];
+
+            // Ajouter des recommandations
+            if ($employee->hasPassport()) {
+                $status['recommendation'] = 'Employé avec passeport - Éligible pour permis renouvelable';
+            } elseif ($attestationService->hasValidAttestation($employee)) {
+                $status['recommendation'] = 'Attestation valide - Employé doit obtenir un passeport avant expiration';
+            } elseif ($employee->hasIdentityDocument()) {
+                $status['recommendation'] = 'Pièce d\'identité disponible - Peut générer une attestation';
+            } else {
+                $status['recommendation'] = 'Aucun document - Doit fournir une pièce d\'identité avant génération d\'attestation';
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $status,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la vérification du statut',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -233,8 +374,12 @@ class EmployeeController extends Controller
             $employee->makeHidden(['photo_url', 'age']); // Masquer les accessors
             $employee->setAttribute('photo_url', $this->getEmployeePhotoUrl($employee->id));
             $employee->setAttribute('identity_document_url', $this->getEmployeeDocumentUrl($employee->id, 'piece_identite'));
+            $employee->setAttribute('passport_url', $this->getEmployeeDocumentUrl($employee->id, 'passeport'));
             $employee->setAttribute('age', Carbon::parse($employee->date_naissance)->age);
             $employee->setAttribute('needs_confirmation', $this->needsMonthlyConfirmation($employee->activeContrat));
+            $employee->setAttribute('document_status', $employee->getDocumentStatus());
+            $employee->setAttribute('has_passport', $employee->hasPassport());
+            $employee->setAttribute('needs_attestation', $employee->needsIdentityAttestation());
 
             // Charger les confirmations mensuelles
             $confirmations = [];
@@ -453,6 +598,80 @@ class EmployeeController extends Controller
             ->where('mois', $currentMonth)
             ->where('annee', $currentYear)
             ->exists();
+    }
+
+    /**
+     * Uploader le passeport d'un employé
+     * POST /api/v1/employees/{id}/passport
+     */
+    public function uploadPassport(Request $request, $id): JsonResponse
+    {
+        try {
+            $employer = $request->user();
+            
+            $employee = Employee::whereHas('contrats', function($query) use ($employer) {
+                $query->where('employer_id', $employer->id);
+            })->find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employé non trouvé ou vous n\'avez pas l\'autorisation',
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'passeport' => 'required|string',
+            ], [
+                'passeport.required' => 'Le document passeport est requis.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreurs de validation',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            // Supprimer l'ancien passeport s'il existe
+            $oldPassport = DocumentEmployee::where('employee_id', $employee->id)
+                ->where('type_document', 'passeport')
+                ->latest()
+                ->first();
+
+            if ($oldPassport) {
+                Storage::disk('public')->delete($oldPassport->chemin_fichier);
+                $oldPassport->delete();
+            }
+
+            // Sauvegarder le nouveau passeport
+            $this->saveBase64Document($employee->id, 'passeport', $request->passeport);
+
+            // Récupérer la nouvelle URL
+            $passportUrl = $this->getEmployeeDocumentUrl($employee->id, 'passeport');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Passeport ajouté avec succès',
+                'data' => [
+                    'employee' => [
+                        'id' => $employee->id,
+                        'passport_url' => $passportUrl,
+                        'document_status' => $employee->getDocumentStatus(),
+                        'has_passport' => true,
+                        'needs_attestation' => false,
+                    ]
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'ajout du passeport',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

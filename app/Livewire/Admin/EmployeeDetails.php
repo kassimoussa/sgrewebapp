@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Employee;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Services\AttestationService;
 
 class EmployeeDetails extends Component
 {
@@ -26,7 +27,22 @@ class EmployeeDetails extends Component
             'documents',
             'photo',
             'identityDocument',
+            'passport',
         ]);
+    }
+
+    public function getDocumentStatusProperty()
+    {
+        $attestationService = new AttestationService();
+        
+        return [
+            'has_passport' => $this->employee->hasPassport(),
+            'has_identity_document' => $this->employee->hasIdentityDocument(),
+            'document_status' => $this->employee->getDocumentStatus(),
+            'needs_attestation' => $this->employee->needsIdentityAttestation(),
+            'has_valid_attestation' => $attestationService->hasValidAttestation($this->employee),
+            'attestation_url' => $attestationService->getValidAttestationUrl($this->employee),
+        ];
     }
 
     public function updatingContractFilter()

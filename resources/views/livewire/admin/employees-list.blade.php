@@ -71,6 +71,17 @@
                 </select>
             </div>
 
+            {{-- Filtre passeport --}}
+            <div class="col-md-2">
+                <label class="form-label">Passeport</label>
+                <select class="form-select" wire:model.live="passportFilter">
+                    <option value="">Tous</option>
+                    <option value="with_passport">Avec passeport</option>
+                    <option value="without_passport">Sans passeport</option>
+                    <option value="needs_attestation">Besoin attestation</option>
+                </select>
+            </div>
+
             {{-- Filtre genre --}}
             <div class="col-md-2">
                 <label class="form-label">Genre</label>
@@ -171,6 +182,21 @@
                                     <div>
                                         <div class="fw-semibold">{{ $employee->nationality->nom }}</div>
                                         <small class="text-muted">{{ $employee->age }} ans</small>
+                                        <div class="mt-1">
+                                            @if($employee->hasPassport())
+                                                <span class="badge bg-success" title="Employé avec passeport">
+                                                    <i class="fas fa-passport me-1"></i>Passeport
+                                                </span>
+                                            @elseif($employee->hasIdentityDocument())
+                                                <span class="badge bg-warning" title="Employé avec pièce d'identité">
+                                                    <i class="fas fa-id-card me-1"></i>Pièce ID
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger" title="Employé nécessitant une attestation">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Attestation
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </td>
 
@@ -219,7 +245,7 @@
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
                                         {{-- Voir détails --}}
-                                        <a href="{{ route('employees.show', $employee->id) }}" 
+                                        <a href="{{ route('admin.employees.show', $employee->id) }}" 
                                            class="btn btn-sm btn-outline-primary"
                                            title="Voir les détails">
                                             <i class="fas fa-eye"></i>
@@ -259,7 +285,7 @@
                 </div>
                 <h5 class="text-muted">Aucun employé trouvé</h5>
                 <p class="text-muted">
-                    @if($search || $regionFilter || $nationalityFilter || $statusFilter || $genderFilter)
+                    @if($search || $regionFilter || $nationalityFilter || $statusFilter || $genderFilter || $passportFilter)
                         Aucun employé ne correspond à vos critères de recherche.
                         <br>
                         <button type="button" 
@@ -335,7 +361,7 @@
     </div>
 
     {{-- Opacity pour les filtres --}}
-    <div wire:loading.class="opacity-50" wire:target="regionFilter,nationalityFilter,statusFilter,genderFilter,perPage">
+    <div wire:loading.class="opacity-50" wire:target="regionFilter,nationalityFilter,statusFilter,genderFilter,passportFilter,perPage">
         <!-- Le contenu sera automatiquement rendu opaque -->
     </div>
 

@@ -12,7 +12,7 @@
                     <a href="{{ route('dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('employees.index') }}">Employés</a>
+                    <a href="{{ route('admin.employees.index') }}">Employés</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                     {{ $employee->nom_complet }}

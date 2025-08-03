@@ -28,6 +28,9 @@ class EmployeesList extends Component
     public string $genderFilter = '';
     
     #[Url]
+    public string $passportFilter = '';
+    
+    #[Url]
     public string $sortField = 'created_at';
     
     #[Url]
@@ -41,6 +44,7 @@ class EmployeesList extends Component
         'nationalityFilter' => ['except' => ''],
         'statusFilter' => ['except' => ''],
         'genderFilter' => ['except' => ''],
+        'passportFilter' => ['except' => ''],
         'sortField' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
     ];
@@ -70,6 +74,11 @@ class EmployeesList extends Component
         $this->resetPage();
     }
 
+    public function updatingPassportFilter()
+    {
+        $this->resetPage();
+    }
+
     public function sortBy($field)
     {
         if ($this->sortField === $field) {
@@ -88,6 +97,7 @@ class EmployeesList extends Component
         $this->nationalityFilter = '';
         $this->statusFilter = '';
         $this->genderFilter = '';
+        $this->passportFilter = '';
         $this->resetPage();
     }
 
@@ -130,6 +140,23 @@ class EmployeesList extends Component
                 }
             })
             ->when($this->genderFilter, fn($query) => $query->where('genre', $this->genderFilter))
+            ->when($this->passportFilter, function($query) {
+                if ($this->passportFilter === 'with_passport') {
+                    $query->whereHas('documents', function($q) {
+                        $q->where('type_document', 'passeport');
+                    });
+                } elseif ($this->passportFilter === 'without_passport') {
+                    $query->whereDoesntHave('documents', function($q) {
+                        $q->where('type_document', 'passeport');
+                    });
+                } elseif ($this->passportFilter === 'needs_attestation') {
+                    $query->whereDoesntHave('documents', function($q) {
+                        $q->where('type_document', 'passeport');
+                    })->whereDoesntHave('documents', function($q) {
+                        $q->where('type_document', 'piece_identite');
+                    });
+                }
+            })
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
