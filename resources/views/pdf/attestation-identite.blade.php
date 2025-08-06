@@ -207,18 +207,13 @@
             </div>
             
             <div class="info-row">
-                <span class="label">Adresse complète :</span>
-                <span class="value">{{ $employee->adresse_complete }}</span>
-            </div>
-            
-            <div class="info-row">
-                <span class="label">Téléphone :</span>
-                <span class="value">{{ $employee->telephone ?? 'Non renseigné' }}</span>
+                <span class="label">Adresse :</span>
+                <span class="value">{{ $employee->quartier }}, {{ $employee->ville }}</span>
             </div>
             
             <div class="info-row">
                 <span class="label">Profession :</span>
-                <span class="value">{{ $employee->profession ?? 'Non spécifiée' }}</span>
+                <span class="value">{{ $employee->activeContrat?->type_emploi ?? 'Non spécifiée' }}</span>
             </div>
         </div>
         

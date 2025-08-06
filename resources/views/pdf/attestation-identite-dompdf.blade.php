@@ -227,16 +227,12 @@
                     <span class="info-value">{{ ucfirst($employee->etat_civil) }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Adresse complète :</span>
-                    <span class="info-value">{{ $employee->adresse_complete }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Téléphone :</span>
-                    <span class="info-value">{{ $employee->telephone ?? 'Non renseigné' }}</span>
+                    <span class="info-label">Adresse :</span>
+                    <span class="info-value">{{ $employee->quartier }}, {{ $employee->ville }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Profession :</span>
-                    <span class="info-value">{{ $employee->profession ?? 'Non spécifiée' }}</span>
+                    <span class="info-value">{{ $employee->activeContrat?->type_emploi ?? 'Non spécifiée' }}</span>
                 </div>
             </div>
             <div style="clear: both;"></div>
