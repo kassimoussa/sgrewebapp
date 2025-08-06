@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Employee;
 use Spatie\Browsershot\Browsershot;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Carbon\Carbon;
@@ -29,7 +30,7 @@ class AttestationService
         $html = View::make('pdf.attestation-identite', $data)->render();
 
         // Nom du fichier PDF
-        $fileName = "attestation_identite_{$employee->id}_" . time() . ".pdf";
+        $fileName = "attestation_" . date('dmY') . ".pdf";
         $filePath = "employees/attestations/" . $fileName;
         $fullPath = storage_path('app/public/' . $filePath);
 
@@ -181,7 +182,7 @@ class AttestationService
         $html = View::make('pdf.carte-permis-travail', $data)->render();
 
         // Nom du fichier PDF
-        $fileName = "carte_permis_travail_{$employee->id}_" . time() . ".pdf";
+        $fileName = "permis_" . date('dmY') . ".pdf";
         $filePath = "employees/permits/" . $fileName;
         $fullPath = storage_path('app/public/' . $filePath);
 
@@ -307,5 +308,107 @@ class AttestationService
             ->first();
 
         return Storage::url($permit->chemin_fichier);
+    }
+
+    /**
+     * Générer une attestation d'identité PDF avec DomPDF (alternative)
+     */
+    public function generateIdentityAttestationWithDomPDF(Employee $employee): string
+    {
+        // Données pour le template
+        $data = [
+            'employee' => $employee,
+            'employer' => $employee->activeContrat?->employer,
+            'contract' => $employee->activeContrat,
+            'generation_date' => Carbon::now(),
+            'attestation_number' => $this->generateAttestationNumber($employee->id),
+            'validity_period' => Carbon::now()->addYear(), // Valide 1 an
+        ];
+
+        // Nom du fichier PDF
+        $fileName = "attestation_" . date('dmY') . ".pdf";
+        $filePath = "employees/attestations/" . $fileName;
+        $fullPath = storage_path('app/public/' . $filePath);
+
+        // Créer le dossier s'il n'existe pas
+        if (!is_dir(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0755, true);
+        }
+
+        // Générer le PDF avec DomPDF
+        $pdf = Pdf::loadView('pdf.attestation-identite-dompdf', $data)
+            ->setPaper('A4', 'portrait')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true,
+            ]);
+            
+        $pdf->save($fullPath);
+
+        // Enregistrer le document en base
+        $employee->documents()->create([
+            'type_document' => 'attestation_identite',
+            'nom_fichier' => $fileName,
+            'chemin_fichier' => $filePath,
+            'mime_type' => 'application/pdf',
+            'taille_fichier' => filesize($fullPath),
+            'extension' => 'pdf',
+        ]);
+
+        return $filePath;
+    }
+
+    /**
+     * Générer une carte de permis de travail PDF avec DomPDF (alternative)
+     */
+    public function generateWorkPermitCardWithDomPDF(Employee $employee): string
+    {
+        // Vérifier que l'employé a un passeport
+        if (!$employee->hasPassport()) {
+            throw new \Exception('L\'employé doit avoir un passeport valide pour générer un permis de travail.');
+        }
+
+        // Données pour le template
+        $data = [
+            'employee' => $employee,
+            'employer' => $employee->activeContrat?->employer,
+            'contract' => $employee->activeContrat,
+            'generation_date' => Carbon::now(),
+            'permit_number' => $this->generatePermitNumber($employee->id),
+        ];
+
+        // Nom du fichier PDF
+        $fileName = "permis_" . date('dmY') . ".pdf";
+        $filePath = "employees/permits/" . $fileName;
+        $fullPath = storage_path('app/public/' . $filePath);
+
+        // Créer le dossier s'il n'existe pas
+        if (!is_dir(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0755, true);
+        }
+
+        // Générer le PDF avec DomPDF
+        $pdf = Pdf::loadView('pdf.carte-permis-travail-dompdf', $data)
+            ->setPaper('A4', 'portrait')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isRemoteEnabled' => true,
+                'isHtml5ParserEnabled' => true,
+            ]);
+            
+        $pdf->save($fullPath);
+
+        // Enregistrer le document en base
+        $employee->documents()->create([
+            'type_document' => 'permis_travail',
+            'nom_fichier' => $fileName,
+            'chemin_fichier' => $filePath,
+            'mime_type' => 'application/pdf',
+            'taille_fichier' => filesize($fullPath),
+            'extension' => 'pdf',
+        ]);
+
+        return $filePath;
     }
 }

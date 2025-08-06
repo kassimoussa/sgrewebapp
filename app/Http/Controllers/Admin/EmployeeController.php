@@ -61,33 +61,6 @@ class EmployeeController extends Controller
         return view('admin.employees.show', compact('employee', 'stats'));
     }
 
-    /**
-     * Générer une attestation d'identité pour un employé
-     */
-    public function generateAttestation(Employee $employee): RedirectResponse
-    {
-        try {
-            // Vérifier si l'employé a déjà un passeport
-            if ($employee->hasPassport()) {
-                return back()->with('error', 'Cet employé possède déjà un passeport. Une attestation n\'est pas nécessaire.');
-            }
-
-            $attestationService = new AttestationService();
-
-            // Vérifier si une attestation valide existe déjà
-            if ($attestationService->hasValidAttestation($employee)) {
-                return back()->with('info', 'Une attestation valide existe déjà pour cet employé.');
-            }
-
-            // Générer l'attestation
-            $attestationPath = $attestationService->generateIdentityAttestation($employee);
-            
-            return back()->with('success', 'Attestation d\'identité générée avec succès. L\'employé peut la télécharger.');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erreur lors de la génération de l\'attestation: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Télécharger l'attestation d'un employé
@@ -111,7 +84,7 @@ class EmployeeController extends Controller
             }
 
             $filePath = storage_path('app/public/' . $attestation->chemin_fichier);
-            $fileName = "attestation_identite_{$employee->nom}_{$employee->prenom}.pdf";
+            $fileName = "attestation_" . date('dmY') . ".pdf";
 
             return response()->download($filePath, $fileName);
 
@@ -120,33 +93,6 @@ class EmployeeController extends Controller
         }
     }
 
-    /**
-     * Générer une carte de permis de travail pour un employé avec passeport
-     */
-    public function generateWorkPermit(Employee $employee): RedirectResponse
-    {
-        try {
-            // Vérifier si l'employé a un passeport
-            if (!$employee->hasPassport()) {
-                return back()->with('error', 'L\'employé doit avoir un passeport valide pour générer un permis de travail.');
-            }
-
-            $attestationService = new AttestationService();
-
-            // Vérifier si un permis valide existe déjà
-            if ($attestationService->hasValidWorkPermit($employee)) {
-                return back()->with('info', 'Un permis de travail valide existe déjà pour cet employé.');
-            }
-
-            // Générer le permis de travail
-            $permitPath = $attestationService->generateWorkPermitCard($employee);
-            
-            return back()->with('success', 'Carte de permis de travail générée avec succès.');
-
-        } catch (\Exception $e) {
-            return back()->with('error', 'Erreur lors de la génération du permis de travail: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Télécharger le permis de travail d'un employé
@@ -170,7 +116,7 @@ class EmployeeController extends Controller
             }
 
             $filePath = storage_path('app/public/' . $permit->chemin_fichier);
-            $fileName = "permis_travail_{$employee->nom}_{$employee->prenom}.pdf";
+            $fileName = "permis_" . date('dmY') . ".pdf";
 
             return response()->download($filePath, $fileName);
 
@@ -247,6 +193,8 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+
+
 
     /**
      * Activer/désactiver un employé (méthode AJAX)

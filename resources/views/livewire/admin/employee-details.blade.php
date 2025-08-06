@@ -10,7 +10,7 @@
                              class="avatar-photo-large me-3"
                              loading="lazy">
                     @else
-                        <div class="avatar-circle me-3" style="width: 60px; height: 60px; font-size: 20px;">
+                        <div class="avatar-circle me-3" style="width: 80px; height: 80px; font-size: 24px;">
                             {{ substr($employee->prenom, 0, 1) }}{{ substr($employee->nom, 0, 1) }}
                         </div>
                     @endif
@@ -148,7 +148,7 @@
             @elseif($activeTab === 'contrats')
                 @include('livewire.admin.employee-details.contrats')
             @elseif($activeTab === 'documents')
-                @include('livewire.admin.employee-details.documents')
+                @livewire('admin.employee-documents', ['employee' => $employee], key('employee-documents-'.$employee->id))
             @elseif($activeTab === 'confirmations')
                 @include('livewire.admin.employee-details.confirmations')
             @endif
@@ -159,8 +159,8 @@
 @push('styles')
 <style>
     .avatar-photo-large {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid var(--primary-color);

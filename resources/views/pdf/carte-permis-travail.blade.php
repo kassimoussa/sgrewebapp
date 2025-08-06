@@ -154,11 +154,10 @@
                 <div class="employee-details">
                     <div><strong>Nationalité:</strong> {{ $employee->nationality->nom }}</div>
                     <div><strong>Né(e) le:</strong> {{ $employee->date_naissance->format('d/m/Y') }}</div>
-                    <div><strong>Passeport:</strong> Valide</div>
-                    @if($employee->activeContrat)
-                        <div><strong>Employeur:</strong> {{ Str::limit($employee->activeContrat->employer->nom_complet, 25) }}</div>
-                        <div><strong>Fonction:</strong> {{ $employee->activeContrat->type_emploi }}</div>
-                    @endif
+                    <div><strong>État civil:</strong> {{ ucfirst($employee->etat_civil) }}</div>
+                    <div><strong>Téléphone:</strong> {{ $employee->telephone ?? 'N/A' }}</div>
+                    <div><strong>Profession:</strong> {{ $employee->profession ?? 'N/A' }}</div>
+                    <div><strong>Adresse:</strong> {{ Str::limit($employee->adresse_complete, 25) }}</div>
                 </div>
             </div>
             

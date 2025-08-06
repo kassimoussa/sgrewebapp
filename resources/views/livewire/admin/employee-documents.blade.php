@@ -1,4 +1,19 @@
 <div>
+    <!-- Messages Flash -->
+    @if (session()->has('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <!-- Section Statut Passeport et Attestation -->
     <div class="card mb-4 border-{{ $this->documentStatus['has_passport'] ? 'success' : ($this->documentStatus['has_valid_attestation'] ? 'warning' : 'danger') }}">
         <div class="card-header bg-{{ $this->documentStatus['has_passport'] ? 'success' : ($this->documentStatus['has_valid_attestation'] ? 'warning' : 'danger') }} text-white">
@@ -67,22 +82,33 @@
                                     <i class="fas fa-download me-1"></i>Télécharger Permis
                                 </a>
                             @endif
-                            <form action="{{ route('admin.employees.generate-work-permit', $employee) }}" 
-                                  method="POST" 
-                                  onsubmit="return confirm('{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} un permis de travail pour cet employé ?')">
-                                @csrf
-                                <button type="submit" class="btn btn-{{ $this->documentStatus['has_valid_work_permit'] ? 'outline-success' : 'success' }} btn-sm w-100">
+                            <!-- Bouton principal DomPDF -->
+                            <button type="button" 
+                                    class="btn btn-{{ $this->documentStatus['has_valid_work_permit'] ? 'outline-success' : 'success' }} btn-sm w-100"
+                                    wire:click="generateWorkPermitDomPDF"
+                                    wire:confirm="{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} un permis de travail pour cet employé ?"
+                                    wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="generateWorkPermitDomPDF">
                                     <i class="fas fa-{{ $this->documentStatus['has_valid_work_permit'] ? 'sync-alt' : 'id-card' }} me-1"></i>{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} Permis
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.employees.generate-work-permit-dompdf', $employee) }}" 
-                                  method="POST" 
-                                  onsubmit="return confirm('{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} un permis de travail avec DomPDF pour cet employé ?')">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-info btn-sm w-100">
-                                    <i class="fas fa-file-pdf me-1"></i>{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} Permis (DomPDF)
-                                </button>
-                            </form>
+                                </span>
+                                <span wire:loading wire:target="generateWorkPermitDomPDF">
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Génération...
+                                </span>
+                            </button>
+                            
+                            <!-- Bouton Browsershot caché -->
+                            <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm w-100 d-none"
+                                    wire:click="generateWorkPermit"
+                                    wire:confirm="{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} un permis de travail avec Browsershot pour cet employé ?"
+                                    wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="generateWorkPermit">
+                                    <i class="fas fa-code me-1"></i>{{ $this->documentStatus['has_valid_work_permit'] ? 'Régénérer' : 'Générer' }} Permis (Browsershot)
+                                </span>
+                                <span wire:loading wire:target="generateWorkPermit">
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Génération...
+                                </span>
+                            </button>
                         </div>
                     @else
                         <div class="d-grid gap-2">
@@ -92,22 +118,33 @@
                                     <i class="fas fa-download me-1"></i>Télécharger Attestation
                                 </a>
                             @endif
-                            <form action="{{ route('admin.employees.generate-attestation', $employee) }}" 
-                                  method="POST" 
-                                  onsubmit="return confirm('{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} une attestation d\'identité pour cet employé ?')">
-                                @csrf
-                                <button type="submit" class="btn btn-{{ $this->documentStatus['has_valid_attestation'] ? 'outline-primary' : 'primary' }} btn-sm w-100">
+                            <!-- Bouton principal DomPDF -->
+                            <button type="button" 
+                                    class="btn btn-{{ $this->documentStatus['has_valid_attestation'] ? 'outline-primary' : 'primary' }} btn-sm w-100"
+                                    wire:click="generateAttestationDomPDF"
+                                    wire:confirm="{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} une attestation d'identité pour cet employé ?"
+                                    wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="generateAttestationDomPDF">
                                     <i class="fas fa-{{ $this->documentStatus['has_valid_attestation'] ? 'sync-alt' : 'file-signature' }} me-1"></i>{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} Attestation
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.employees.generate-attestation-dompdf', $employee) }}" 
-                                  method="POST" 
-                                  onsubmit="return confirm('{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} une attestation d\'identité avec DomPDF pour cet employé ?')">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-info btn-sm w-100">
-                                    <i class="fas fa-file-pdf me-1"></i>{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} Attestation (DomPDF)
-                                </button>
-                            </form>
+                                </span>
+                                <span wire:loading wire:target="generateAttestationDomPDF">
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Génération...
+                                </span>
+                            </button>
+                            
+                            <!-- Bouton Browsershot caché -->
+                            <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm w-100 d-none"
+                                    wire:click="generateAttestation"
+                                    wire:confirm="{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} une attestation d'identité avec Browsershot pour cet employé ?"
+                                    wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="generateAttestation">
+                                    <i class="fas fa-code me-1"></i>{{ $this->documentStatus['has_valid_attestation'] ? 'Régénérer' : 'Générer' }} Attestation (Browsershot)
+                                </span>
+                                <span wire:loading wire:target="generateAttestation">
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Génération...
+                                </span>
+                            </button>
                         </div>
                     @endif
                 </div>
@@ -135,9 +172,7 @@
                                          alt="{{ $document->type_label }}" 
                                          class="w-100 h-100"
                                          style="object-fit: cover; cursor: pointer;"
-                                         data-bs-toggle="modal"
-                                         data-bs-target="#imageModal"
-                                         onclick="showImageModal('{{ $document->url }}', '{{ $document->type_label }}')">
+                                         wire:click="showImageModal('{{ $document->url }}', '{{ $document->type_label }}')">
                                 @else
                                     <div class="d-flex align-items-center justify-content-center h-100">
                                         <div class="text-center text-muted">
@@ -179,9 +214,7 @@
                                         @if($document->isImage())
                                             <button type="button" 
                                                     class="btn btn-outline-primary"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#imageModal"
-                                                    onclick="showImageModal('{{ $document->url }}', '{{ $document->type_label }}')"
+                                                    wire:click="showImageModal('{{ $document->url }}', '{{ $document->type_label }}')"
                                                     title="Voir l'image">
                                                 <i class="fas fa-eye"></i>
                                             </button>
@@ -193,25 +226,17 @@
                                             <i class="fas fa-download"></i>
                                         </a>
                                         <!-- Bouton supprimer (temporaire pour tests) -->
-                                        <form action="{{ route('admin.employees.delete-document', [$employee, $document]) }}" 
-                                              method="POST" 
-                                              style="display: inline;"
-                                              onsubmit="return confirm('Supprimer définitivement ce document ?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="btn btn-outline-danger"
-                                                    title="Supprimer">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" 
+                                                class="btn btn-outline-danger"
+                                                wire:click="deleteDocument({{ $document->id }})"
+                                                wire:confirm="Supprimer définitivement ce document ?"
+                                                title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                         <!-- Bouton remplacer (temporaire pour tests) -->
                                         <button type="button" 
                                                 class="btn btn-outline-warning"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#replaceModal"
-                                                data-document-id="{{ $document->id }}"
-                                                data-document-type="{{ $document->type_label }}"
+                                                wire:click="showReplaceModal({{ $document->id }})"
                                                 title="Remplacer">
                                             <i class="fas fa-exchange-alt"></i>
                                         </button>
@@ -273,89 +298,75 @@
             </p>
         </div>
     @endif
-</div>
 
-<!-- Modal pour affichage des images -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imageModalLabel">Document</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" alt="" class="img-fluid">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                <a id="downloadButton" href="" class="btn btn-primary" download>
-                    <i class="fas fa-download me-2"></i>Télécharger
-                </a>
+    <!-- Modal pour affichage des images -->
+    @if($imageModalOpen)
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ $selectedImageTitle }}</h5>
+                        <button type="button" class="btn-close" wire:click="closeImageModal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="{{ $selectedImageUrl }}" alt="{{ $selectedImageTitle }}" class="img-fluid">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeImageModal">Fermer</button>
+                        <a href="{{ $selectedImageUrl }}" class="btn btn-primary" download>
+                            <i class="fas fa-download me-2"></i>Télécharger
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
 
-<!-- Modal pour remplacer un document -->
-<div class="modal fade" id="replaceModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="replaceModalLabel">Remplacer le document</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="replaceForm" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="replaceFile" class="form-label">Sélectionner un nouveau fichier</label>
-                        <input type="file" 
-                               class="form-control" 
-                               id="replaceFile" 
-                               name="file" 
-                               accept="image/*,application/pdf" 
-                               required>
-                        <div class="form-text">
-                            Formats acceptés: JPG, PNG, PDF. Taille maximum: 5MB
+    <!-- Modal pour remplacer un document -->
+    @if($replaceModalOpen && $documentToReplace)
+        <div class="modal fade show" style="display: block;" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Remplacer {{ $documentToReplace->type_label }}</h5>
+                        <button type="button" class="btn-close" wire:click="closeReplaceModal"></button>
+                    </div>
+                    <form wire:submit.prevent="replaceDocument">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="replaceFile" class="form-label">Sélectionner un nouveau fichier</label>
+                                <input type="file" 
+                                       class="form-control @error('replaceFile') is-invalid @enderror" 
+                                       wire:model="replaceFile"
+                                       accept="image/*,application/pdf">
+                                @error('replaceFile')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">
+                                    Formats acceptés: JPG, PNG, PDF. Taille maximum: 5MB
+                                </div>
+                            </div>
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Attention:</strong> Cette action remplacera définitivement le document existant.
+                            </div>
                         </div>
-                    </div>
-                    <div class="alert alert-warning" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Attention:</strong> Cette action remplacera définitivement le document existant.
-                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" wire:click="closeReplaceModal">Annuler</button>
+                            <button type="submit" class="btn btn-warning" wire:loading.attr="disabled">
+                                <span wire:loading.remove>
+                                    <i class="fas fa-exchange-alt me-2"></i>Remplacer
+                                </span>
+                                <span wire:loading>
+                                    <i class="fas fa-spinner fa-spin me-2"></i>Remplacement...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-exchange-alt me-2"></i>Remplacer
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+        <div class="modal-backdrop fade show"></div>
+    @endif
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Fonction pour le modal d'image
-        window.showImageModal = function(imageUrl, title) {
-            document.getElementById('modalImage').src = imageUrl;
-            document.getElementById('imageModalLabel').textContent = title;
-            document.getElementById('downloadButton').href = imageUrl;
-        }
-
-        // Événement Bootstrap pour le modal de remplacement
-        const replaceModal = document.getElementById('replaceModal');
-        if (replaceModal) {
-            replaceModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const documentId = button.getAttribute('data-document-id');
-                const documentType = button.getAttribute('data-document-type');
-                
-                document.getElementById('replaceModalLabel').textContent = 'Remplacer ' + documentType;
-                const baseUrl = "{{ route('admin.employees.replace-document', [$employee, '__DOCUMENT_ID__']) }}";
-                document.getElementById('replaceForm').action = baseUrl.replace('__DOCUMENT_ID__', documentId);
-            });
-        }
-    });
-</script>

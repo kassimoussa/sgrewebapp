@@ -202,28 +202,25 @@
             </div>
             
             <div class="info-row">
-                <span class="label">Adresse :</span>
-                <span class="value">{{ $employee->quartier }}, {{ $employee->ville }}, {{ $employee->region }}</span>
+                <span class="label">État civil :</span>
+                <span class="value">{{ ucfirst($employee->etat_civil) }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Adresse complète :</span>
+                <span class="value">{{ $employee->adresse_complete }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Téléphone :</span>
+                <span class="value">{{ $employee->telephone ?? 'Non renseigné' }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Profession :</span>
+                <span class="value">{{ $employee->profession ?? 'Non spécifiée' }}</span>
             </div>
         </div>
-        
-        @if($employer && $contract)
-        <div class="employer-info">
-            <h3 style="color: #a16207; margin-top: 0;">Emploi Actuel</h3>
-            <div class="info-row">
-                <span class="label">Employeur :</span>
-                <span class="value">{{ $employer->nom_complet }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Type d'emploi :</span>
-                <span class="value">{{ $contract->type_emploi }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Date début contrat :</span>
-                <span class="value">{{ $contract->date_debut->format('d/m/Y') }}</span>
-            </div>
-        </div>
-        @endif
         
         <div class="validity">
             <h4>⚠️ IMPORTANT - OBLIGATION LÉGALE</h4>
