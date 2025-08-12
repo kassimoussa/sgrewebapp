@@ -150,14 +150,14 @@ class EmployeeController extends Controller
             $employer = $request->user();
 
             // 1. Créer l'employé
-            $adresseComplete = $request->adresse_complete;
-            if (empty($adresseComplete)) {
-                $adresseComplete = implode(', ', array_filter([
+            // Générer automatiquement l'adresse complète si non fournie
+            $adresseComplete = $request->filled('adresse_complete') 
+                ? $request->adresse_complete 
+                : implode(', ', array_filter([
                     $request->quartier,
                     $request->ville,
                     $request->region
                 ]));
-            }
 
             $employee = Employee::create([
                 'prenom' => $request->prenom,
