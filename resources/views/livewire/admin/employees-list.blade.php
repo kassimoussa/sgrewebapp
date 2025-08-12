@@ -187,13 +187,9 @@
                                                 <span class="badge bg-success" title="Employé avec passeport">
                                                     <i class="fas fa-passport me-1"></i>Passeport
                                                 </span>
-                                            @elseif($employee->hasIdentityDocument())
-                                                <span class="badge bg-warning" title="Employé avec pièce d'identité">
-                                                    <i class="fas fa-id-card me-1"></i>Pièce ID
-                                                </span>
                                             @else
-                                                <span class="badge bg-danger" title="Employé nécessitant une attestation">
-                                                    <i class="fas fa-exclamation-triangle me-1"></i>Attestation
+                                                <span class="badge bg-warning" title="Employé sans passeport">
+                                                    No Passport
                                                 </span>
                                             @endif
                                         </div>

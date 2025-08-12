@@ -156,6 +156,8 @@
     
     <div class="header">
         <h1>République de Djibouti</h1>
+        <h2>Ministère du Travail et de l'Emploi</h2>
+        <h3 style="color: #64748b; font-size: 14px; margin: 5px 0;">Agence Nationale de l'Emploi, de la Formation et de l'Insertion Professionnelle (ANEFIP)</h3>
         <h2>Attestation d'Identité à Titre Administratif</h2>
     </div>
     

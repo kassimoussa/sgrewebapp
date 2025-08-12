@@ -182,7 +182,7 @@
     <div class="header">
         <h1>RÉPUBLIQUE DE DJIBOUTI</h1>
         <h2>MINISTÈRE DU TRAVAIL ET DE L'EMPLOI</h2>
-        <p>Direction de l'Emploi et de la Main d'Œuvre</p>
+        <p>Agence Nationale de l'Emploi, de la Formation et de l'Insertion Professionnelle (ANEFIP)</p>
     </div>
 
     <div class="attestation-number">
@@ -278,7 +278,7 @@
         <div class="signature-right">
             <div style="text-align: center;">
                 <div style="margin-bottom: 10px;">Djibouti, le {{ $generation_date->format('d/m/Y') }}</div>
-                <div style="margin-bottom: 30px;">Le Directeur de l'Emploi</div>
+                <div style="margin-bottom: 30px;">Le Directeur Général de l'ANEFIP</div>
                 <div class="signature-line"></div>
                 <div class="signature-label">Signature et Cachet</div>
             </div>
@@ -287,7 +287,7 @@
 
     <div class="page-footer">
         République de Djibouti - Ministère du Travail et de l'Emploi<br>
-        Direction de l'Emploi et de la Main d'Œuvre<br>
+        Agence Nationale de l'Emploi, de la Formation et de l'Insertion Professionnelle (ANEFIP)<br>
         Attestation d'Identité à Titre Administratif - {{ $attestation_number }}
     </div>
 </body>

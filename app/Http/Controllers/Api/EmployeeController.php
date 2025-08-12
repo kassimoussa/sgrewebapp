@@ -181,7 +181,7 @@ class EmployeeController extends Controller
             }
 
             if ($request->piece_identite) {
-                $this->saveBase64Document($employee->id, 'piece_identite', $request->piece_identite);
+                $this->saveBase64Document($employee->id, 'passeport', $request->piece_identite);
             }
 
             if ($request->passeport) {

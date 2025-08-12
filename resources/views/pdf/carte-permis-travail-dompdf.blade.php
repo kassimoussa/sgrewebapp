@@ -230,8 +230,8 @@
         </div>
         
         <div class="back-footer">
-            Ministère du Travail et de l'Emploi<br>
-            République de Djibouti
+            ANEFIP - République de Djibouti<br>
+            Ministère du Travail et de l'Emploi
         </div>
     </div>
 </body>
